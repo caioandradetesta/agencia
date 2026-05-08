@@ -42,7 +42,8 @@ app.use(express.static(path.join(__dirname, '../dist')));
 // Servir a pasta de uploads publicamente
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-app.get('(.*)', (req, res) => {
+// Fallback para o React (SPA) - Deve ser a ÚLTIMA rota
+app.use((req, res) => {
   if (!req.url.startsWith('/api')) {
     res.sendFile(path.join(__dirname, '../dist/index.html'));
   }
