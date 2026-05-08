@@ -80,17 +80,27 @@ router.patch('/tasks/:id', async (req, res) => {
     await db.query('BEGIN');
 
     // Atualização dos campos básicos (incluindo workflow_tag e recurrence)
+    // Usamos uma lógica que permite anular campos se vierem vazios ou nulos
     const { rows } = await db.query(
       `UPDATE tasks 
-       SET status = COALESCE($1, status), 
-           title = COALESCE($2, title), 
-           description = COALESCE($3, description), 
-           priority = COALESCE($4, priority), 
-           due_date = COALESCE($5, due_date),
-           workflow_tag = COALESCE($6, workflow_tag),
-           recurrence = COALESCE($7, recurrence)
+       SET status = $1, 
+           title = $2, 
+           description = $3, 
+           priority = $4, 
+           due_date = $5,
+           workflow_tag = $6,
+           recurrence = $7
        WHERE id = $8 RETURNING *`,
-      [status, title, description, priority, due_date, workflow_tag, recurrence, id]
+      [
+        status || 'todo', 
+        title, 
+        description || '', 
+        priority || 'medium', 
+        (due_date === '' || !due_date) ? null : due_date, 
+        workflow_tag || null, 
+        recurrence || null, 
+        id
+      ]
     );
 
     // Sincronização dos responsáveis (se enviados)
