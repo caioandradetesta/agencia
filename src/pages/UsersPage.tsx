@@ -15,6 +15,7 @@ import { useUsers } from '../hooks/useUsers';
 import { useTeams } from '../hooks/useTeams';
 import { AddUserModal } from '../components/AddUserModal';
 import { AddTeamModal } from '../components/AddTeamModal';
+import { EditUserModal } from '../components/EditUserModal';
 import { api } from '../lib/api';
 import './UsersPage.css';
 
@@ -23,6 +24,7 @@ export const UsersPage: React.FC = () => {
   const { teams, refresh: refreshTeams } = useTeams();
   const [showUserModal, setShowUserModal] = useState(false);
   const [showTeamModal, setShowTeamModal] = useState(false);
+  const [editingUser, setEditingUser] = useState<any>(null);
   const [activeTab, setActiveTab] = useState<'members' | 'teams'>('members');
 
   const refreshAll = () => {
@@ -158,7 +160,13 @@ export const UsersPage: React.FC = () => {
                         </td>
                         <td>
                           <div className="action-group">
-                            <button className="icon-btn"><Edit3 size={16} /></button>
+                            <button 
+                              className="icon-btn" 
+                              onClick={() => setEditingUser(user)}
+                              title="Editar"
+                            >
+                              <Edit3 size={16} />
+                            </button>
                             <button className="icon-btn"><Mail size={16} /></button>
                             <button className="icon-btn delete"><Trash2 size={16} /></button>
                             <button className="icon-btn"><MoreHorizontal size={16} /></button>
@@ -233,6 +241,14 @@ export const UsersPage: React.FC = () => {
       {showTeamModal && (
         <AddTeamModal 
           onClose={() => setShowTeamModal(false)} 
+          onSuccess={refreshAll}
+        />
+      )}
+
+      {editingUser && (
+        <EditUserModal 
+          user={editingUser}
+          onClose={() => setEditingUser(null)}
           onSuccess={refreshAll}
         />
       )}

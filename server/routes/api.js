@@ -100,6 +100,22 @@ router.get('/users', async (req, res) => {
   }
 });
 
+router.patch('/profiles/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { full_name, role, team_id } = req.body;
+    
+    const { rows } = await db.query(
+      'UPDATE profiles SET full_name = $1, role = $2, team_id = $3 WHERE id = $4 RETURNING *',
+      [full_name, role, team_id || null, id]
+    );
+    
+    res.json(rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 router.get('/teams', async (req, res) => {
   try {
     const { rows } = await db.query('SELECT * FROM teams ORDER BY name ASC');
