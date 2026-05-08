@@ -187,16 +187,17 @@ export const BoardSettingsModal: React.FC<BoardSettingsModalProps> = ({ onClose,
                   </div>
                   
                   <div className="stage-responsibles-config">
-                    <label>Responsáveis:</label>
-                    <div className="responsibles-toggles">
+                    <label>Responsáveis Automáticos:</label>
+                    <div className="responsibles-toggles-list">
                       {users.map(u => (
                         <div 
                           key={u.user_id}
-                          className={`res-toggle-mini ${col.responsible_user_ids?.includes(u.user_id) ? 'active' : ''}`}
+                          className={`res-pill-toggle ${col.responsible_user_ids?.includes(u.user_id) ? 'active' : ''}`}
                           onClick={() => toggleResponsibleForExisting(col, u.user_id)}
-                          title={u.full_name}
                         >
-                          {u.full_name.charAt(0)}
+                          <div className="u-avatar-dot" style={{ backgroundColor: u.color }}></div>
+                          <span>{u.full_name}</span>
+                          {col.responsible_user_ids?.includes(u.user_id) && <Check size={12} />}
                         </div>
                       ))}
                     </div>
