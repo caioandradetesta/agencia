@@ -78,7 +78,7 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, onClose,
     setFormData(prev => ({
       ...prev,
       assignee_ids: prev.assignee_ids.includes(userId)
-        ? prev.assignee_ids.filter(id => id !== userId)
+        ? prev.assignee_ids.filter((id: string) => id !== userId)
         : [...prev.assignee_ids, userId]
     }));
   };
