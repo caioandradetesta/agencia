@@ -7,7 +7,13 @@ export interface Task {
   status: 'todo' | 'doing' | 'review' | 'done';
   project_id: string;
   description?: string;
-  priority?: string;
+  priority?: 'low' | 'medium' | 'high';
+  due_date?: string;
+  assigned_to?: string;
+  profiles?: {
+    full_name: string;
+    avatar_url?: string;
+  };
 }
 
 export const useTasks = () => {
@@ -40,8 +46,10 @@ export const useTasks = () => {
     try {
       const response = await api.post('/api/tasks', task);
       setTasks(prev => [...prev, response.data]);
+      return response.data;
     } catch (err) {
       console.error('Erro ao adicionar tarefa:', err);
+      throw err;
     }
   };
 

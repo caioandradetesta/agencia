@@ -21,7 +21,7 @@ export const KanbanBoard: React.FC = () => {
       medium: 'Média',
       high: 'Alta'
     };
-    return map[priority] || priority;
+    return map[priority || 'medium'] || priority || 'Média';
   };
 
   const handleDragStart = (e: React.DragEvent, taskId: string) => {

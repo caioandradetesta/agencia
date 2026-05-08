@@ -26,8 +26,7 @@ export const AddClientModal: React.FC<AddClientModalProps> = ({ onClose, onSucce
     try {
       let logo_url = '';
       if (logoFile) {
-        const fileName = `${Date.now()}-${logoFile.name}`;
-        logo_url = await uploadFile('logos', fileName, logoFile);
+        logo_url = await uploadFile('logos', logoFile);
       }
 
       const response = await api.post('/api/clients', {

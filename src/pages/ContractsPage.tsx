@@ -114,11 +114,11 @@ export const ContractsPage: React.FC = () => {
                           <FileText size={20} className="doc-icon" />
                           <div className="doc-info">
                             <span className="doc-title">{contract.title}</span>
-                            <span className="doc-project">{contract.projects?.name || 'Sem projeto'}</span>
+                            <span className="doc-project">{contract.project_name || 'Sem projeto'}</span>
                           </div>
                         </div>
                       </td>
-                      <td>{contract.clients?.company || '--'}</td>
+                      <td>{contract.client_name || '--'}</td>
                       <td>
                         <span className="value-cell">R$ {contract.value?.toLocaleString('pt-BR')}</span>
                       </td>

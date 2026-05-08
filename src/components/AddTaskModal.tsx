@@ -9,7 +9,7 @@ interface AddTaskModalProps {
 }
 
 export const AddTaskModal: React.FC<AddTaskModalProps> = ({ onClose, onSuccess }) => {
-  const { createTask } = useTasks();
+  const { addTask } = useTasks();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
@@ -24,7 +24,7 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ onClose, onSuccess }
     setLoading(true);
 
     try {
-      await createTask(formData);
+      await addTask(formData);
       onSuccess();
       onClose();
     } catch (err: any) {

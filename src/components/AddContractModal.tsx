@@ -45,8 +45,7 @@ export const AddContractModal: React.FC<AddContractModalProps> = ({ onClose, onS
     try {
       let file_url = '';
       if (file) {
-        const fileName = `${Date.now()}-${file.name}`;
-        file_url = await uploadFile('contracts', fileName, file);
+        file_url = await uploadFile('contracts', file);
       }
 
       await api.post('/api/contracts', {

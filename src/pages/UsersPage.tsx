@@ -100,7 +100,7 @@ export const UsersPage: React.FC = () => {
                         </div>
                       </td>
                       <td>
-                        <span className="team-tag">{user.teams?.name || 'Sem Equipe'}</span>
+                        <span className="team-tag">{user.team_name || 'Sem Equipe'}</span>
                       </td>
                       <td>
                         <div className="role-cell">

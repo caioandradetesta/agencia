@@ -3,10 +3,9 @@ import { api } from './api';
 /**
  * Faz upload de um arquivo para o backend local no Dokploy
  * @param bucket Nome da pasta (ex: logos, contracts)
- * @param fileName Nome do arquivo (não usado no backend local pois ele gera um único)
  * @param file O arquivo em si
  */
-export const uploadFile = async (bucket: string, fileName: string, file: File): Promise<string> => {
+export const uploadFile = async (bucket: string, file: File): Promise<string> => {
   const formData = new FormData();
   formData.append('file', file);
 
