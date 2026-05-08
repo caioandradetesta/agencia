@@ -12,14 +12,21 @@ import {
   Users
 } from 'lucide-react';
 import { useUsers } from '../hooks/useUsers';
+import { useTeams } from '../hooks/useTeams';
 import { AddUserModal } from '../components/AddUserModal';
 import { AddTeamModal } from '../components/AddTeamModal';
 import './UsersPage.css';
 
 export const UsersPage: React.FC = () => {
-  const { users, loading, error, refresh } = useUsers();
+  const { users, loading: usersLoading, error: usersError, refresh: refreshUsers } = useUsers();
+  const { teams, refresh: refreshTeams } = useTeams();
   const [showUserModal, setShowUserModal] = useState(false);
   const [showTeamModal, setShowTeamModal] = useState(false);
+
+  const refreshAll = () => {
+    refreshUsers();
+    refreshTeams();
+  };
 
   return (
     <div className="users-page animate-fade-in">
@@ -51,7 +58,7 @@ export const UsersPage: React.FC = () => {
         </div>
         <div className="u-stat">
           <span className="u-label">Equipes</span>
-          <span className="u-value">--</span>
+          <span className="u-value">{teams.length}</span>
         </div>
       </div>
 
@@ -61,19 +68,19 @@ export const UsersPage: React.FC = () => {
             <Search size={18} />
             <input type="text" placeholder="Buscar por nome, email ou equipe..." />
           </div>
-          <button className="secondary-btn" onClick={refresh}>Atualizar</button>
+          <button className="secondary-btn" onClick={refreshAll}>Atualizar</button>
         </div>
 
-        {loading ? (
+        {usersLoading ? (
           <div className="loading-state">
             <Loader2 className="animate-spin" size={32} />
             <p>Carregando membros da equipe...</p>
           </div>
-        ) : error ? (
+        ) : usersError ? (
           <div className="error-state">
             <AlertCircle size={32} />
-            <p>Erro ao carregar dados: {error}</p>
-            <button onClick={refresh}>Tentar novamente</button>
+            <p>Erro ao carregar dados: {usersError}</p>
+            <button onClick={refreshAll}>Tentar novamente</button>
           </div>
         ) : (
           <div className="users-table-wrapper">
@@ -140,14 +147,14 @@ export const UsersPage: React.FC = () => {
       {showUserModal && (
         <AddUserModal 
           onClose={() => setShowUserModal(false)} 
-          onSuccess={refresh}
+          onSuccess={refreshAll}
         />
       )}
 
       {showTeamModal && (
         <AddTeamModal 
           onClose={() => setShowTeamModal(false)} 
-          onSuccess={refresh}
+          onSuccess={refreshAll}
         />
       )}
     </div>
