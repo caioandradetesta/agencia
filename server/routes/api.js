@@ -105,6 +105,7 @@ router.get('/kanban-columns', async (req, res) => {
     `);
     res.json(rows);
   } catch (err) {
+    console.error('❌ Erro ao buscar colunas do Kanban:', err);
     res.status(500).json({ error: err.message });
   }
 });

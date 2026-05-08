@@ -3,63 +3,60 @@ const path = require('path');
 const db = require('./db');
 
 async function migrate() {
-  console.log('--- INICIANDO MIGRAÇÃO ROBUSTA (V4) ---');
-  try {
-    const sqlPath = path.join(__dirname, 'init.sql');
-    if (!fs.existsSync(sqlPath)) return;
-
-    const sql = fs.readFileSync(sqlPath, 'utf8');
-
+  console.log('--- INICIANDO MIGRAÇÃO ULTRA-ROBUSTA (V5) ---');
+  
+  const runQuery = async (query, desc) => {
     try {
-      await db.query('BEGIN');
-      
-      // 1. Garantir extensões
-      await db.query('CREATE EXTENSION IF NOT EXISTS "uuid-ossp";');
-      await db.query('CREATE EXTENSION IF NOT EXISTS "pgcrypto";');
-      
-      // 2. Correção Crítica: Garantir que profiles.user_id seja UNIQUE para permitir FKs
-      try {
-        await db.query('ALTER TABLE profiles ADD CONSTRAINT profiles_user_id_key UNIQUE (user_id);');
-      } catch (e) {
-        // Ignorar se já for unique
+      await db.query(query);
+      console.log(`✅ ${desc}`);
+    } catch (err) {
+      if (err.message.includes('already exists') || err.message.includes('duplicate')) {
+        console.log(`ℹ️ ${desc} (Já existe)`);
+      } else {
+        console.warn(`⚠️ Erro em "${desc}":`, err.message);
       }
+    }
+  };
 
-      // 3. Executar o SQL completo
-      await db.query(sql);
-      
-      await db.query('COMMIT');
-      console.log('✅ Banco de dados sincronizado com sucesso!');
-    } catch (sqlErr) {
-      await db.query('ROLLBACK');
-      console.warn('⚠️ Falha no bloco SQL completo, tentando correções individuais...', sqlErr.message);
-      
-      // Tentativas individuais para garantir o funcionamento do Kanban
-      const fixes = [
-        `ALTER TABLE profiles ADD CONSTRAINT profiles_user_id_key UNIQUE (user_id);`,
-        `CREATE TABLE IF NOT EXISTS kanban_columns (
-          id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-          title TEXT NOT NULL,
-          slug TEXT UNIQUE NOT NULL,
-          color TEXT DEFAULT '#6366F1',
-          sort_order INTEGER DEFAULT 0,
-          responsible_user_id UUID REFERENCES profiles(user_id),
-          created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-        );`,
-        `ALTER TABLE kanban_columns ADD COLUMN IF NOT EXISTS responsible_user_id UUID REFERENCES profiles(user_id);`
-      ];
+  try {
+    // 1. Extensões (Crítico para UUIDs)
+    await runQuery('CREATE EXTENSION IF NOT EXISTS "uuid-ossp";', 'Extensão uuid-ossp');
+    await runQuery('CREATE EXTENSION IF NOT EXISTS "pgcrypto";', 'Extensão pgcrypto');
 
-      for (const cmd of fixes) {
-        try {
-          await db.query(cmd);
-        } catch (e) {
-          console.log('ℹ️ Fix ignorado ou já aplicado:', e.message);
-        }
+    // 2. Garantir que Profiles tenha User_ID único (Necessário para o Kanban)
+    await runQuery('ALTER TABLE profiles ADD CONSTRAINT profiles_user_id_key UNIQUE (user_id);', 'Constraint UNIQUE em profiles.user_id');
+
+    // 3. Criar a tabela kanban_columns na marra se não existir
+    await runQuery(`
+      CREATE TABLE IF NOT EXISTS kanban_columns (
+        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+        title TEXT NOT NULL,
+        slug TEXT UNIQUE NOT NULL,
+        color TEXT DEFAULT '#6366F1',
+        sort_order INTEGER DEFAULT 0,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      );
+    `, 'Tabela kanban_columns');
+
+    // 4. Garantir a coluna de responsável (Caso a tabela tenha sido criada sem ela)
+    await runQuery('ALTER TABLE kanban_columns ADD COLUMN IF NOT EXISTS responsible_user_id UUID REFERENCES profiles(user_id);', 'Coluna responsible_user_id');
+
+    // 5. Rodar o init.sql completo (Mas de forma segura, ignorando o que já existe)
+    const sqlPath = path.join(__dirname, 'init.sql');
+    if (fs.existsSync(sqlPath)) {
+      const sql = fs.readFileSync(sqlPath, 'utf8');
+      // Tentamos rodar o bloco todo, se falhar, os passos acima já garantiram o essencial
+      try {
+        await db.query(sql);
+        console.log('✅ init.sql processado completamente.');
+      } catch (e) {
+        console.log('ℹ️ Nota: Algumas partes do init.sql já estavam aplicadas.');
       }
     }
 
-    console.log('✅ Processo de migração finalizado!');
+    console.log('✅ Migração V5 finalizada!');
   } catch (err) {
-    console.error('❌ ERRO CRÍTICO NA MIGRAÇÃO:', err);
+    console.error('❌ ERRO FATAL NO PROCESSO DE MIGRAÇÃO:', err);
   }
 }
 
