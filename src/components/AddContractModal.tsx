@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, Loader2, FileText, Building2, Briefcase, DollarSign, Upload } from 'lucide-react';
-import { supabase } from '../lib/supabase';
+import { api } from '../lib/api';
 import { uploadFile } from '../lib/storage';
 import './Modal.css';
 
@@ -24,10 +24,16 @@ export const AddContractModal: React.FC<AddContractModalProps> = ({ onClose, onS
 
   useEffect(() => {
     const fetchData = async () => {
-      const { data: cData } = await supabase.from('clients').select('id, company');
-      const { data: pData } = await supabase.from('projects').select('id, name');
-      if (cData) setClients(cData);
-      if (pData) setProjects(pData);
+      try {
+        const [cRes, pRes] = await Promise.all([
+          api.get('/api/clients'),
+          api.get('/api/projects')
+        ]);
+        setClients(cRes.data);
+        setProjects(pRes.data);
+      } catch (err) {
+        console.error('Erro ao buscar dados para contrato:', err);
+      }
     };
     fetchData();
   }, []);
@@ -43,19 +49,16 @@ export const AddContractModal: React.FC<AddContractModalProps> = ({ onClose, onS
         file_url = await uploadFile('contracts', fileName, file);
       }
 
-      const { error } = await supabase
-        .from('contracts')
-        .insert([{
-          ...formData,
-          value: parseFloat(formData.value) || 0,
-          file_url
-        }]);
+      await api.post('/api/contracts', {
+        ...formData,
+        value: parseFloat(formData.value) || 0,
+        file_url
+      });
 
-      if (error) throw error;
       onSuccess();
       onClose();
     } catch (err: any) {
-      alert('Erro ao salvar contrato: ' + err.message);
+      alert('Erro ao salvar contrato: ' + (err.response?.data?.error || err.message));
     } finally {
       setLoading(false);
     }

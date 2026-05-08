@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, Loader2, User, Mail, Shield, Users as UsersIcon } from 'lucide-react';
-import { supabase } from '../lib/supabase';
+import { api } from '../lib/api';
 import './Modal.css';
 
 interface AddUserModalProps {
@@ -19,10 +19,13 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({ onClose, onSuccess }
   });
 
   useEffect(() => {
-    // Fetch available teams
     const fetchTeams = async () => {
-      const { data } = await supabase.from('teams').select('id, name');
-      if (data) setTeams(data);
+      try {
+        const response = await api.get('/api/teams');
+        setTeams(response.data);
+      } catch (err) {
+        console.error('Erro ao buscar equipes:', err);
+      }
     };
     fetchTeams();
   }, []);
@@ -32,22 +35,16 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({ onClose, onSuccess }
     setLoading(true);
 
     try {
-      // For a real app, you would use Supabase Admin Auth to create users,
-      // but since we are using Client SDK, we will just insert into the profiles table.
-      // Note: In production, the user would need to sign up themselves or use an invite flow.
-      
-      const { error } = await supabase
-        .from('profiles')
-        .insert([{
-          id: crypto.randomUUID(), // Mock ID if user doesn't exist in Auth yet
-          ...formData
-        }]);
+      // Nota: Em um sistema real, o cadastro de novos membros exigiria 
+      // uma rota de convite ou criação de conta no backend.
+      const response = await api.post('/api/users', formData);
 
-      if (error) throw error;
-      onSuccess();
-      onClose();
+      if (response.data) {
+        onSuccess();
+        onClose();
+      }
     } catch (err: any) {
-      alert('Erro ao salvar usuário: ' + err.message);
+      alert('Erro ao salvar usuário: ' + (err.response?.data?.error || err.message));
     } finally {
       setLoading(false);
     }
