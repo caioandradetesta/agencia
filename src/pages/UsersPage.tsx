@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { 
   UserPlus, 
   MoreHorizontal, 
@@ -6,29 +6,15 @@ import {
   Shield, 
   Trash2, 
   Edit3,
-  Search
+  Search,
+  Loader2,
+  AlertCircle
 } from 'lucide-react';
+import { useUsers } from '../hooks/useUsers';
 import './UsersPage.css';
 
-interface TeamMember {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-  team: string;
-  status: 'Ativo' | 'Inativo';
-  avatar?: string;
-}
-
-const mockUsers: TeamMember[] = [
-  { id: '1', name: 'João Silva', email: 'joao@agencia.com', role: 'Administrador', team: 'Design', status: 'Ativo' },
-  { id: '2', name: 'Ana Souza', email: 'ana@agencia.com', role: 'Developer', team: 'Dev', status: 'Ativo' },
-  { id: '3', name: 'Carlos Lima', email: 'carlos@agencia.com', role: 'Copywriter', team: 'Content', status: 'Inativo' },
-  { id: '4', name: 'Marina Lopes', email: 'marina@agencia.com', role: 'Project Manager', team: 'Gestão', status: 'Ativo' },
-];
-
 export const UsersPage: React.FC = () => {
-  const [users] = useState<TeamMember[]>(mockUsers);
+  const { users, loading, error, refresh } = useUsers();
 
   return (
     <div className="users-page animate-fade-in">
@@ -50,11 +36,11 @@ export const UsersPage: React.FC = () => {
         </div>
         <div className="u-stat">
           <span className="u-label">Membros Ativos</span>
-          <span className="u-value">{users.filter(u => u.status === 'Ativo').length}</span>
+          <span className="u-value">{users.length}</span>
         </div>
         <div className="u-stat">
           <span className="u-label">Equipes</span>
-          <span className="u-value">4</span>
+          <span className="u-value">--</span>
         </div>
       </div>
 
@@ -64,65 +50,80 @@ export const UsersPage: React.FC = () => {
             <Search size={18} />
             <input type="text" placeholder="Buscar por nome, email ou equipe..." />
           </div>
-          <div className="filters">
-            <select>
-              <option>Todas as Equipes</option>
-              <option>Design</option>
-              <option>Dev</option>
-            </select>
-          </div>
+          <button className="secondary-btn" onClick={refresh}>Atualizar</button>
         </div>
 
-        <div className="users-table-wrapper">
-          <table className="users-table">
-            <thead>
-              <tr>
-                <th>Membro</th>
-                <th>Equipe</th>
-                <th>Função</th>
-                <th>Status</th>
-                <th>Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              {users.map(user => (
-                <tr key={user.id}>
-                  <td>
-                    <div className="user-cell">
-                      <div className="u-avatar">{user.name.charAt(0)}</div>
-                      <div className="u-info">
-                        <span className="u-name">{user.name}</span>
-                        <span className="u-email">{user.email}</span>
-                      </div>
-                    </div>
-                  </td>
-                  <td>
-                    <span className="team-tag">{user.team}</span>
-                  </td>
-                  <td>
-                    <div className="role-cell">
-                      <Shield size={14} />
-                      {user.role}
-                    </div>
-                  </td>
-                  <td>
-                    <span className={`status-badge ${user.status.toLowerCase()}`}>
-                      {user.status}
-                    </span>
-                  </td>
-                  <td>
-                    <div className="action-group">
-                      <button className="icon-btn"><Edit3 size={16} /></button>
-                      <button className="icon-btn"><Mail size={16} /></button>
-                      <button className="icon-btn delete"><Trash2 size={16} /></button>
-                      <button className="icon-btn"><MoreHorizontal size={16} /></button>
-                    </div>
-                  </td>
+        {loading ? (
+          <div className="loading-state">
+            <Loader2 className="animate-spin" size={32} />
+            <p>Carregando membros da equipe...</p>
+          </div>
+        ) : error ? (
+          <div className="error-state">
+            <AlertCircle size={32} />
+            <p>Erro ao carregar dados: {error}</p>
+            <button onClick={refresh}>Tentar novamente</button>
+          </div>
+        ) : (
+          <div className="users-table-wrapper">
+            <table className="users-table">
+              <thead>
+                <tr>
+                  <th>Membro</th>
+                  <th>Equipe</th>
+                  <th>Função</th>
+                  <th>Status</th>
+                  <th>Ações</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {users.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} style={{ textAlign: 'center', padding: '40px' }}>
+                      Nenhum usuário encontrado no banco de dados.
+                    </td>
+                  </tr>
+                ) : (
+                  users.map(user => (
+                    <tr key={user.id}>
+                      <td>
+                        <div className="user-cell">
+                          <div className="u-avatar">
+                            {user.avatar_url ? <img src={user.avatar_url} alt="" /> : user.full_name?.charAt(0)}
+                          </div>
+                          <div className="u-info">
+                            <span className="u-name">{user.full_name}</span>
+                            <span className="u-email">{user.email || 'Sem e-mail'}</span>
+                          </div>
+                        </div>
+                      </td>
+                      <td>
+                        <span className="team-tag">{user.teams?.name || 'Sem Equipe'}</span>
+                      </td>
+                      <td>
+                        <div className="role-cell">
+                          <Shield size={14} />
+                          {user.role}
+                        </div>
+                      </td>
+                      <td>
+                        <span className="status-badge ativo">Ativo</span>
+                      </td>
+                      <td>
+                        <div className="action-group">
+                          <button className="icon-btn"><Edit3 size={16} /></button>
+                          <button className="icon-btn"><Mail size={16} /></button>
+                          <button className="icon-btn delete"><Trash2 size={16} /></button>
+                          <button className="icon-btn"><MoreHorizontal size={16} /></button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );
