@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Tag, Plus, Trash2, User as UserIcon, Palette, Loader2, GripVertical } from 'lucide-react';
+import { X, Tag, Plus, Trash2, User as UserIcon, Palette, Loader2 } from 'lucide-react';
 import { api } from '../lib/api';
 import { useUsers } from '../hooks/useUsers';
 import './Modal.css';

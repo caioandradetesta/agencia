@@ -7,7 +7,6 @@ import {
   Users, 
   UserSquare2, 
   FileText, 
-  Settings,
   ChevronLeft,
   ChevronDown,
   Menu,

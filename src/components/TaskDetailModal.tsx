@@ -21,6 +21,7 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, onClose,
   const [loading, setLoading] = useState(false);
   const [commentsLoading, setCommentsLoading] = useState(true);
   const [comments, setComments] = useState<any[]>([]);
+  const [workflowStages, setWorkflowStages] = useState<any[]>([]);
   const [newComment, setNewComment] = useState('');
   const [formData, setFormData] = useState({
     title: task.title || '',
@@ -37,6 +38,7 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, onClose,
 
   useEffect(() => {
     fetchComments();
+    fetchWorkflowStages();
   }, [task.id]);
 
   useEffect(() => {
@@ -45,6 +47,15 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, onClose,
 
   const scrollToBottom = () => {
     commentsEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const fetchWorkflowStages = async () => {
+    try {
+      const res = await api.get('/api/workflow-configs');
+      setWorkflowStages(res.data);
+    } catch (err) {
+      console.error('Erro ao buscar estágios:', err);
+    }
   };
 
   const fetchComments = async () => {
@@ -130,7 +141,7 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, onClose,
                   onChange={e => setFormData({ ...formData, workflow_tag: e.target.value })}
                 >
                   <option value="">Nenhum</option>
-                  {workflowStages.map(stage => (
+                  {workflowStages.map((stage: any) => (
                     <option key={stage.tag_name} value={stage.tag_name}>
                       {stage.label}
                     </option>

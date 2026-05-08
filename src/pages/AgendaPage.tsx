@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronLeft, ChevronRight, Filter, User as UserIcon, Flag, Tag, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, User as UserIcon, Flag, Tag, X } from 'lucide-react';
 import { useTasks } from '../hooks/useTasks';
 import { useUsers } from '../hooks/useUsers';
 import { TaskDetailModal } from '../components/TaskDetailModal';
