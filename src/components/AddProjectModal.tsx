@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Loader2, FolderPlus, User, AlignLeft, Briefcase } from 'lucide-react';
+import { X, Loader2, User, AlignLeft, Briefcase } from 'lucide-react';
 import { api } from '../lib/api';
 import { useClients } from '../hooks/useClients';
 import './Modal.css';

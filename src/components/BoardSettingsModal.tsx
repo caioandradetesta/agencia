@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Layout, Plus, Trash2, Palette, Loader2, GripVertical } from 'lucide-react';
+import { X, Layout, Plus, Trash2, Palette, Loader2 } from 'lucide-react';
 import { api } from '../lib/api';
 import './Modal.css';
 

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Users, Settings, Plus, Shield, Trash2, Mail, MoreHorizontal, Edit3, Search, Loader2, AlertCircle, RefreshCcw } from 'lucide-react';
+import { Users, Plus, Shield, Trash2, Mail, MoreHorizontal, Edit3, Search, Loader2, AlertCircle, RefreshCcw } from 'lucide-react';
 import { useUsers } from '../hooks/useUsers';
 import { useTeams } from '../hooks/useTeams';
 import { AddUserModal } from '../components/AddUserModal';
