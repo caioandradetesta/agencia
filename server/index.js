@@ -1,9 +1,8 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-const fs = require('fs');
-const db = require('./db');
 require('dotenv').config();
+const migrate = require('./migrate');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -15,18 +14,6 @@ app.use(express.json());
 const authRoutes = require('./routes/auth');
 const apiRoutes = require('./routes/api');
 const uploadRoutes = require('./routes/uploads');
-
-// Função para inicializar o banco de dados
-const initDb = async () => {
-  try {
-    console.log('Iniciando migração do banco de dados...');
-    const sql = fs.readFileSync(path.join(__dirname, 'init.sql'), 'utf8');
-    await db.query(sql);
-    console.log('Banco de dados inicializado com sucesso! ✅');
-  } catch (err) {
-    console.error('Erro ao inicializar o banco de dados:', err.message);
-  }
-};
 
 // API Routes
 app.use('/api/auth', authRoutes);
@@ -49,9 +36,10 @@ app.use((req, res) => {
   }
 });
 
-// Iniciar servidor após tentar inicializar o banco
-initDb().then(() => {
+// Iniciar servidor após migração do banco
+migrate().then(() => {
   app.listen(PORT, () => {
     console.log(`Servidor rodando na porta ${PORT}`);
+    console.log(`Ambiente: ${process.env.NODE_ENV || 'development'}`);
   });
 });

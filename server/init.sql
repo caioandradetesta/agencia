@@ -154,3 +154,14 @@ ON CONFLICT (slug) DO NOTHING;
 
 -- Adicionar responsável automático às colunas do Kanban
 ALTER TABLE kanban_columns ADD COLUMN IF NOT EXISTS responsible_user_id UUID REFERENCES profiles(user_id);
+
+-- Garantir que a tabela e a coluna existam (Redundância de segurança)
+CREATE TABLE IF NOT EXISTS kanban_columns (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  title TEXT NOT NULL,
+  slug TEXT UNIQUE NOT NULL,
+  color TEXT DEFAULT '#6366F1',
+  sort_order INTEGER DEFAULT 0,
+  responsible_user_id UUID REFERENCES profiles(user_id),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
