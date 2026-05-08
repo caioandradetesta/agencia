@@ -12,11 +12,13 @@ import {
 } from 'lucide-react';
 import { useUsers } from '../hooks/useUsers';
 import { AddUserModal } from '../components/AddUserModal';
+import { AddTeamModal } from '../components/AddTeamModal';
 import './UsersPage.css';
 
 export const UsersPage: React.FC = () => {
   const { users, loading, error, refresh } = useUsers();
-  const [showModal, setShowModal] = useState(false);
+  const [showUserModal, setShowUserModal] = useState(false);
+  const [showTeamModal, setShowTeamModal] = useState(false);
 
   return (
     <div className="users-page animate-fade-in">
@@ -25,10 +27,16 @@ export const UsersPage: React.FC = () => {
           <h1>Gestão de Usuários</h1>
           <p>Gerencie sua equipe e permissões de acesso.</p>
         </div>
-        <button className="add-user-btn" onClick={() => setShowModal(true)}>
-          <UserPlus size={18} />
-          Convidar Membro
-        </button>
+        <div className="header-actions">
+          <button className="secondary-btn" onClick={() => setShowTeamModal(true)}>
+            <Users size={18} />
+            Nova Equipe
+          </button>
+          <button className="add-user-btn" onClick={() => setShowUserModal(true)}>
+            <UserPlus size={18} />
+            Convidar Membro
+          </button>
+        </div>
       </div>
 
       <div className="users-stats">
@@ -128,9 +136,16 @@ export const UsersPage: React.FC = () => {
         )}
       </div>
 
-      {showModal && (
+      {showUserModal && (
         <AddUserModal 
-          onClose={() => setShowModal(false)} 
+          onClose={() => setShowUserModal(false)} 
+          onSuccess={refresh}
+        />
+      )}
+
+      {showTeamModal && (
+        <AddTeamModal 
+          onClose={() => setShowTeamModal(false)} 
           onSuccess={refresh}
         />
       )}

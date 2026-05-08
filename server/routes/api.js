@@ -109,6 +109,19 @@ router.get('/teams', async (req, res) => {
   }
 });
 
+router.post('/teams', async (req, res) => {
+  try {
+    const { name, description } = req.body;
+    const { rows } = await db.query(
+      'INSERT INTO teams (name, description) VALUES ($1, $2) RETURNING *',
+      [name, description]
+    );
+    res.json(rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // --- CONTRATOS ---
 
 router.get('/contracts', async (req, res) => {
