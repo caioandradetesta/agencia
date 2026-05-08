@@ -832,10 +832,15 @@
 }
 
 .res-pill-toggle.active {
-  background-color: rgba(16, 185, 129, 0.1);
-  border-color: #10B981;
-  color: #059669;
+  background-color: #10B981;
+  border-color: #059669;
+  color: white;
   font-weight: 600;
+  box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);
+}
+
+.res-pill-toggle.active .u-avatar-dot {
+  background-color: white !important;
 }
 
 .u-avatar-dot {
