@@ -211,6 +211,11 @@ router.patch('/tasks/:id', async (req, res) => {
       ]
     );
 
+    if (rows.length === 0) {
+      await db.query('ROLLBACK');
+      return res.status(404).json({ error: 'Tarefa não encontrada' });
+    }
+
     // Sincronização dos responsáveis (se enviados)
     if (assignee_ids && Array.isArray(assignee_ids)) {
       await db.query('DELETE FROM task_assignments WHERE task_id = $1', [id]);
