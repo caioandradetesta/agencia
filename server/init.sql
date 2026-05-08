@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS teams (
 -- 3. Perfis de Usuário (Profiles)
 CREATE TABLE IF NOT EXISTS profiles (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  user_id UUID UNIQUE REFERENCES users(id) ON DELETE CASCADE,
   full_name TEXT,
   avatar_url TEXT,
   role TEXT DEFAULT 'user',
