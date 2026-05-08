@@ -151,3 +151,6 @@ VALUES
   ('Revisão', 'review', '#f59e0b', 2),
   ('Concluído', 'done', '#10b981', 3)
 ON CONFLICT (slug) DO NOTHING;
+
+-- Adicionar responsável automático às colunas do Kanban
+ALTER TABLE kanban_columns ADD COLUMN IF NOT EXISTS responsible_user_id UUID REFERENCES profiles(user_id);

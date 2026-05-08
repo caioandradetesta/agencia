@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Layout, Plus, Trash2, Palette, Loader2 } from 'lucide-react';
+import { X, Layout, Plus, Trash2, Palette, Loader2, User as UserIcon } from 'lucide-react';
 import { api } from '../lib/api';
+import { useUsers } from '../hooks/useUsers';
 import './Modal.css';
 
 interface BoardSettingsModalProps {
@@ -14,17 +15,22 @@ interface Column {
   title: string;
   slug: string;
   color: string;
+  responsible_user_id: string | null;
+  responsible_name?: string;
+  responsible_color?: string;
 }
 
 const PRESET_COLORS = ['#94a3b8', '#6366F1', '#EC4899', '#F59E0B', '#10B981', '#3B82F6', '#8B5CF6', '#EF4444'];
 
 export const BoardSettingsModal: React.FC<BoardSettingsModalProps> = ({ onClose, onSuccess }) => {
+  const { users } = useUsers();
   const [columns, setColumns] = useState<Column[]>([]);
   const [loading, setLoading] = useState(false);
   const [newCol, setNewCol] = useState({
     title: '',
     slug: '',
-    color: '#6366F1'
+    color: '#6366F1',
+    responsible_user_id: ''
   });
 
   useEffect(() => {
@@ -48,15 +54,28 @@ export const BoardSettingsModal: React.FC<BoardSettingsModalProps> = ({ onClose,
     try {
       await api.post('/api/kanban-columns', {
         ...newCol,
-        sort_order: columns.length
+        sort_order: columns.length,
+        responsible_user_id: newCol.responsible_user_id || null
       });
-      setNewCol({ title: '', slug: '', color: '#6366F1' });
+      setNewCol({ title: '', slug: '', color: '#6366F1', responsible_user_id: '' });
       fetchColumns();
       onSuccess();
     } catch (err) {
       alert('Erro ao adicionar coluna');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleUpdateColumnResponsible = async (colId: string, userId: string) => {
+    try {
+      await api.patch(`/api/kanban-columns/${colId}`, {
+        responsible_user_id: userId || null
+      });
+      fetchColumns();
+      onSuccess();
+    } catch (err) {
+      alert('Erro ao atualizar responsável');
     }
   };
 
@@ -76,8 +95,8 @@ export const BoardSettingsModal: React.FC<BoardSettingsModalProps> = ({ onClose,
       <div className="modal-content workflow-modal animate-fade-in" onClick={e => e.stopPropagation()}>
         <div className="modal-header">
           <div className="header-info-modal">
-            <h2>Configurar Colunas do Quadro</h2>
-            <p>Personalize as etapas do seu processo Kanban.</p>
+            <h2>Configurar Colunas e Responsáveis</h2>
+            <p>Defina as etapas do projeto e quem assume as tarefas em cada fase.</p>
           </div>
           <button className="close-btn" onClick={onClose}><X size={20} /></button>
         </div>
@@ -101,14 +120,16 @@ export const BoardSettingsModal: React.FC<BoardSettingsModalProps> = ({ onClose,
                 />
               </div>
               <div className="form-group flex-2">
-                <label>Slug (Identificador)</label>
-                <input 
-                  type="text" 
-                  placeholder="Ex: em-aprovacao" 
-                  value={newCol.slug}
-                  readOnly
-                  style={{ backgroundColor: 'var(--bg-primary)', opacity: 0.7 }}
-                />
+                <label><UserIcon size={14} /> Responsável Automático</label>
+                <select 
+                  value={newCol.responsible_user_id}
+                  onChange={e => setNewCol({ ...newCol, responsible_user_id: e.target.value })}
+                >
+                  <option value="">Ninguém (Manual)</option>
+                  {users.map(u => (
+                    <option key={u.user_id} value={u.user_id}>{u.full_name}</option>
+                  ))}
+                </select>
               </div>
             </div>
 
@@ -131,14 +152,29 @@ export const BoardSettingsModal: React.FC<BoardSettingsModalProps> = ({ onClose,
             </button>
           </form>
 
-          <div className="stages-divider">Colunas Ativas</div>
+          <div className="stages-divider">Colunas Ativas e Automações</div>
 
           <div className="stages-list-scroll">
             {columns.map(col => (
               <div key={col.id} className="stage-card-manage" style={{ borderLeft: `4px solid ${col.color}` }}>
                 <div className="stage-main-info">
-                  <span className="stage-tag-badge" style={{ backgroundColor: col.color }}>{col.title}</span>
-                  <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>/{col.slug}</span>
+                  <div className="stage-title-row">
+                    <span className="stage-tag-badge" style={{ backgroundColor: col.color }}>{col.title}</span>
+                    <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>/{col.slug}</span>
+                  </div>
+                  
+                  <div className="stage-responsible-select">
+                    <UserIcon size={12} />
+                    <select 
+                      value={col.responsible_user_id || ''}
+                      onChange={(e) => handleUpdateColumnResponsible(col.id, e.target.value)}
+                    >
+                      <option value="">Sem responsável automático</option>
+                      {users.map(u => (
+                        <option key={u.user_id} value={u.user_id}>Atribuir a: {u.full_name}</option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
                 <button className="delete-stage-btn" onClick={() => handleDeleteColumn(col.id, col.title)}>
                   <Trash2 size={16} />
@@ -149,7 +185,7 @@ export const BoardSettingsModal: React.FC<BoardSettingsModalProps> = ({ onClose,
         </div>
 
         <div className="modal-actions">
-          <button className="submit-btn" onClick={onClose}>Concluir</button>
+          <button className="submit-btn" onClick={onClose}>Salvar e Sair</button>
         </div>
       </div>
     </div>,

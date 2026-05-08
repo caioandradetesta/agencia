@@ -90,7 +90,19 @@ export const KanbanBoard: React.FC = () => {
                     {tasks.filter(t => t.status === column.slug).length}
                   </span>
                 </div>
-                <button className="more-btn"><MoreVertical size={16} /></button>
+                <div className="column-header-right">
+                  {column.responsible_user_id && (
+                    <div className="col-owner" title={`Responsável: ${column.responsible_name}`}>
+                      <div 
+                        className="col-owner-avatar" 
+                        style={{ backgroundColor: column.responsible_color || 'var(--accent-primary)' }}
+                      >
+                        {column.responsible_name?.charAt(0)}
+                      </div>
+                    </div>
+                  )}
+                  <button className="more-btn"><MoreVertical size={16} /></button>
+                </div>
               </div>
 
               <div className="task-list">

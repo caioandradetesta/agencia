@@ -97,7 +97,12 @@ router.delete('/projects/:id', async (req, res) => {
 
 router.get('/kanban-columns', async (req, res) => {
   try {
-    const { rows } = await db.query('SELECT * FROM kanban_columns ORDER BY sort_order ASC');
+    const { rows } = await db.query(`
+      SELECT kc.*, p.full_name as responsible_name, p.color as responsible_color
+      FROM kanban_columns kc
+      LEFT JOIN profiles p ON kc.responsible_user_id = p.user_id
+      ORDER BY kc.sort_order ASC
+    `);
     res.json(rows);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -106,10 +111,29 @@ router.get('/kanban-columns', async (req, res) => {
 
 router.post('/kanban-columns', async (req, res) => {
   try {
-    const { title, slug, color, sort_order } = req.body;
+    const { title, slug, color, sort_order, responsible_user_id } = req.body;
     const { rows } = await db.query(
-      'INSERT INTO kanban_columns (title, slug, color, sort_order) VALUES ($1, $2, $3, $4) RETURNING *',
-      [title, slug, color || '#6366F1', sort_order || 0]
+      'INSERT INTO kanban_columns (title, slug, color, sort_order, responsible_user_id) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+      [title, slug, color || '#6366F1', sort_order || 0, responsible_user_id || null]
+    );
+    res.json(rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.patch('/kanban-columns/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { title, color, sort_order, responsible_user_id } = req.body;
+    const { rows } = await db.query(
+      `UPDATE kanban_columns 
+       SET title = COALESCE($1, title), 
+           color = COALESCE($2, color), 
+           sort_order = COALESCE($3, sort_order),
+           responsible_user_id = $4
+       WHERE id = $5 RETURNING *`,
+      [title, color, sort_order, responsible_user_id, id]
     );
     res.json(rows[0]);
   } catch (err) {
@@ -163,7 +187,7 @@ router.patch('/tasks/:id', async (req, res) => {
     
     await db.query('BEGIN');
 
-    // Atualização dos campos básicos (incluindo workflow_tag e recurrence)
+    // Atualização dos campos básicos
     const { rows } = await db.query(
       `UPDATE tasks 
        SET status = $1, 
@@ -197,7 +221,33 @@ router.patch('/tasks/:id', async (req, res) => {
       }
     }
 
-    // --- AUTOMAÇÃO DE WORKFLOW ---
+    // --- AUTOMAÇÃO POR COLUNA KANBAN (PROJETO) ---
+    if (status) {
+      const { rows: colConfig } = await db.query(
+        'SELECT responsible_user_id, title FROM kanban_columns WHERE slug = $1',
+        [status]
+      );
+
+      if (colConfig.length > 0 && colConfig[0].responsible_user_id) {
+        const autoUserId = colConfig[0].responsible_user_id;
+        await db.query(`
+          INSERT INTO task_assignments (task_id, user_id) 
+          VALUES ($1, $2) 
+          ON CONFLICT (task_id, user_id) DO NOTHING
+        `, [id, autoUserId]);
+
+        await db.query(`
+          INSERT INTO notifications (user_id, title, content)
+          VALUES ($1, $2, $3)
+        `, [
+          autoUserId, 
+          `Nova Atribuição Automática`, 
+          `Tarefa "${rows[0].title}" movida para o estágio "${colConfig[0].title}".`
+        ]);
+      }
+    }
+
+    // --- AUTOMAÇÃO DE WORKFLOW (TAGS ANTIGAS - MANTIDO POR COMPATIBILIDADE) ---
     if (workflow_tag) {
       const { rows: config } = await db.query(
         'SELECT user_id FROM workflow_configs WHERE tag_name = $1',
@@ -211,15 +261,6 @@ router.patch('/tasks/:id', async (req, res) => {
           VALUES ($1, $2) 
           ON CONFLICT (task_id, user_id) DO NOTHING
         `, [id, autoUserId]);
-
-        await db.query(`
-          INSERT INTO notifications (user_id, title, content)
-          VALUES ($1, $2, $3)
-        `, [
-          autoUserId, 
-          `Nova Atribuição: ${workflow_tag}`, 
-          `Você foi adicionado à tarefa "${rows[0].title}" pois ela entrou no estágio de ${workflow_tag}.`
-        ]);
       }
     }
     
