@@ -36,13 +36,30 @@ export const KanbanBoard: React.FC = () => {
     return map[priority || 'medium'] || priority || 'Média';
   };
 
-  const handleDragStart = (e: React.DragEvent, taskId: string) => {
+  const onDragStart = (e: React.DragEvent, taskId: string) => {
     e.dataTransfer.setData('taskId', taskId);
+    e.currentTarget.classList.add('dragging');
   };
 
-  const handleDrop = (e: React.DragEvent, status: string) => {
+  const onDragEnd = (e: React.DragEvent) => {
+    e.currentTarget.classList.remove('dragging');
+    document.querySelectorAll('.kanban-column').forEach(col => col.classList.remove('drag-over'));
+  };
+
+  const onDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.currentTarget.classList.add('drag-over');
+  };
+
+  const onDragLeave = (e: React.DragEvent) => {
+    e.currentTarget.classList.remove('drag-over');
+  };
+
+  const onDrop = (e: React.DragEvent, newStatus: string) => {
+    e.preventDefault();
+    e.currentTarget.classList.remove('drag-over');
     const taskId = e.dataTransfer.getData('taskId');
-    updateTaskStatus(taskId, status);
+    updateTaskStatus(taskId, newStatus);
   };
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -79,8 +96,9 @@ export const KanbanBoard: React.FC = () => {
             <div 
               key={column.id} 
               className="kanban-column"
-              onDrop={(e) => handleDrop(e, column.slug)}
-              onDragOver={handleDragOver}
+              onDrop={(e) => onDrop(e, column.slug)}
+              onDragOver={onDragOver}
+              onDragLeave={onDragLeave}
             >
               <div className="column-header" style={{ borderTop: `4px solid ${column.color}` }}>
                 <div className="column-title">
@@ -111,7 +129,8 @@ export const KanbanBoard: React.FC = () => {
                     key={task.id} 
                     className="task-card animate-fade-in"
                     draggable
-                    onDragStart={(e) => handleDragStart(e, task.id)}
+                    onDragStart={(e) => onDragStart(e, task.id)}
+                    onDragEnd={onDragEnd}
                     onClick={() => setSelectedTask(task)}
                   >
                     <div className="task-priority">
