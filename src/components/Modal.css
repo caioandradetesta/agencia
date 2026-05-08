@@ -528,3 +528,142 @@
   border-color: var(--text-primary);
   transform: scale(1.1);
 }
+
+/* Workflow Management Styles */
+.workflow-modal {
+  width: 100%;
+  max-width: 650px;
+}
+
+.workflow-body {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.add-stage-form {
+  background-color: var(--bg-tertiary);
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.color-picker-mini {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.c-dot {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: all 0.2s;
+}
+
+.c-dot.active {
+  border-color: var(--text-primary);
+  transform: scale(1.1);
+}
+
+.add-btn-workflow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px;
+  background-color: var(--accent-primary);
+  color: white;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.add-btn-workflow:hover:not(:disabled) {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.stages-divider {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  letter-spacing: 1px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.stages-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background-color: var(--border-color);
+}
+
+.stages-list-scroll {
+  max-height: 300px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-right: 8px;
+}
+
+.stage-card-manage {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background-color: var(--bg-secondary);
+  border-radius: 10px;
+  border: 1px solid var(--border-color);
+}
+
+.stage-main-info {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.stage-tag-badge {
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: white;
+}
+
+.stage-owner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.delete-stage-btn {
+  color: var(--text-muted);
+  padding: 6px;
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+
+.delete-stage-btn:hover {
+  color: #EF4444;
+  background-color: rgba(239, 68, 68, 0.1);
+}
+
+.empty-stages {
+  text-align: center;
+  padding: 30px;
+  color: var(--text-muted);
+  font-style: italic;
+  font-size: 14px;
+}

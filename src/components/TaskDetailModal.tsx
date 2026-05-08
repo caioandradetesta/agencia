@@ -130,10 +130,11 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, onClose,
                   onChange={e => setFormData({ ...formData, workflow_tag: e.target.value })}
                 >
                   <option value="">Nenhum</option>
-                  <option value="Revisão">Revisão</option>
-                  <option value="Alteração">Alteração</option>
-                  <option value="Aprovação">Aprovação</option>
-                  <option value="Finalização">Finalização</option>
+                  {workflowStages.map(stage => (
+                    <option key={stage.tag_name} value={stage.tag_name}>
+                      {stage.label}
+                    </option>
+                  ))}
                 </select>
               </div>
               <div className="form-group">

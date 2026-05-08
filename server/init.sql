@@ -127,3 +127,8 @@ ALTER TABLE tasks ADD COLUMN IF NOT EXISTS recurrence TEXT; -- daily, weekly, mo
 
 -- Adicionar coluna de cor personalizada nos perfis
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS color TEXT DEFAULT '#6366F1';
+
+-- Atualizar tabela de estágios para suportar cores e ordenação
+ALTER TABLE workflow_configs ADD COLUMN IF NOT EXISTS color TEXT DEFAULT '#6366F1';
+ALTER TABLE workflow_configs ADD COLUMN IF NOT EXISTS label TEXT;
+ALTER TABLE workflow_configs ADD COLUMN IF NOT EXISTS sort_order INTEGER DEFAULT 0;

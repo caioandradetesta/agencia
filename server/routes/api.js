@@ -175,14 +175,15 @@ router.patch('/tasks/:id', async (req, res) => {
   }
 });
 
-// --- WORKFLOW CONFIGS ---
+// --- WORKFLOW CONFIGS (ESTÁGIOS DINÂMICOS) ---
 
 router.get('/workflow-configs', async (req, res) => {
   try {
     const { rows } = await db.query(`
-      SELECT wc.*, p.full_name 
+      SELECT wc.*, p.full_name, p.color as user_color
       FROM workflow_configs wc
-      JOIN profiles p ON wc.user_id = p.user_id
+      LEFT JOIN profiles p ON wc.user_id = p.user_id
+      ORDER BY wc.sort_order ASC
     `);
     res.json(rows);
   } catch (err) {
@@ -192,12 +193,29 @@ router.get('/workflow-configs', async (req, res) => {
 
 router.post('/workflow-configs', async (req, res) => {
   try {
-    const { tag_name, user_id } = req.body;
+    const { tag_name, user_id, color, label, sort_order } = req.body;
     const { rows } = await db.query(
-      'INSERT INTO workflow_configs (tag_name, user_id) VALUES ($1, $2) ON CONFLICT (tag_name) DO UPDATE SET user_id = EXCLUDED.user_id RETURNING *',
-      [tag_name, user_id]
+      `INSERT INTO workflow_configs (tag_name, user_id, color, label, sort_order) 
+       VALUES ($1, $2, $3, $4, $5) 
+       ON CONFLICT (tag_name) DO UPDATE 
+       SET user_id = EXCLUDED.user_id, 
+           color = EXCLUDED.color, 
+           label = EXCLUDED.label, 
+           sort_order = EXCLUDED.sort_order 
+       RETURNING *`,
+      [tag_name, user_id, color || '#6366F1', label || tag_name, sort_order || 0]
     );
     res.json(rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.delete('/workflow-configs/:tagName', async (req, res) => {
+  try {
+    const { tagName } = req.params;
+    await db.query('DELETE FROM workflow_configs WHERE tag_name = $1', [tagName]);
+    res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
