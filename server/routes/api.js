@@ -229,14 +229,15 @@ router.patch('/tasks/:id', async (req, res) => {
 
     // --- AUTOMAÇÃO POR COLUNA KANBAN (PROJETO) ---
     if (status) {
+      console.log(`🔍 [Automação] Buscando config para coluna: "${status}"`);
       const { rows: colConfig } = await db.query(
-        'SELECT responsible_user_id, title FROM kanban_columns WHERE slug = $1',
+        'SELECT responsible_user_id, title FROM kanban_columns WHERE slug ILIKE $1',
         [status]
       );
 
       if (colConfig.length > 0 && colConfig[0].responsible_user_id) {
         const autoUserId = colConfig[0].responsible_user_id;
-        console.log(`🤖 [Automação] Atribuindo usuário ${autoUserId} à tarefa ${id} (Estágio: ${status})`);
+        console.log(`✅ [Automação] Responsável encontrado: ${autoUserId} para estágio "${colConfig[0].title}"`);
         
         await db.query(`
           INSERT INTO task_assignments (task_id, user_id) 
