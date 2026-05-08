@@ -104,7 +104,12 @@ export const KanbanBoard: React.FC = () => {
                       </div>
                       <div className="task-assignees">
                         {task.assignees?.map((a: any) => (
-                          <div key={a.user_id} className="assignee-avatar" title={a.full_name}>
+                          <div 
+                            key={a.user_id} 
+                            className="assignee-avatar" 
+                            style={{ backgroundColor: a.color || 'var(--accent-primary)' }}
+                            title={a.full_name}
+                          >
                             {a.full_name?.charAt(0)}
                           </div>
                         ))}

@@ -55,7 +55,8 @@ router.get('/tasks', async (req, res) => {
                  json_build_object(
                    'user_id', p.user_id,
                    'full_name', p.full_name,
-                   'avatar_url', p.avatar_url
+                   'avatar_url', p.avatar_url,
+                   'color', p.color
                  )
                ) FILTER (WHERE p.id IS NOT NULL), 
                '[]'
@@ -316,11 +317,11 @@ router.get('/users', async (req, res) => {
 router.patch('/profiles/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { full_name, role, team_id } = req.body;
+    const { full_name, role, team_id, color } = req.body;
     
     const { rows } = await db.query(
-      'UPDATE profiles SET full_name = $1, role = $2, team_id = $3 WHERE id = $4 RETURNING *',
-      [full_name, role, team_id || null, id]
+      'UPDATE profiles SET full_name = $1, role = $2, team_id = $3, color = $4 WHERE id = $5 RETURNING *',
+      [full_name, role, team_id || null, color || '#6366F1', id]
     );
     
     res.json(rows[0]);

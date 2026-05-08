@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Loader2, User, Mail, Shield, Users as UsersIcon } from 'lucide-react';
+import { X, Loader2, User, Mail, Shield, Users as UsersIcon, Palette } from 'lucide-react';
 import { api } from '../lib/api';
 import { useTeams } from '../hooks/useTeams';
 import './Modal.css';
@@ -11,13 +11,25 @@ interface EditUserModalProps {
   onSuccess: () => void;
 }
 
+const PRESET_COLORS = [
+  '#6366F1', // Indigo
+  '#EC4899', // Pink
+  '#F59E0B', // Amber
+  '#10B981', // Emerald
+  '#3B82F6', // Blue
+  '#8B5CF6', // Violet
+  '#EF4444', // Red
+  '#06B6D4', // Cyan
+];
+
 export const EditUserModal: React.FC<EditUserModalProps> = ({ user, onClose, onSuccess }) => {
   const [loading, setLoading] = useState(false);
   const { teams } = useTeams();
   const [formData, setFormData] = useState({
     full_name: user.full_name || '',
     role: user.role || 'user',
-    team_id: user.team_id || ''
+    team_id: user.team_id || '',
+    color: user.color || '#6366F1'
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -83,6 +95,20 @@ export const EditUserModal: React.FC<EditUserModalProps> = ({ user, onClose, onS
                   <option key={team.id} value={team.id}>{team.name}</option>
                 ))}
               </select>
+            </div>
+          </div>
+
+          <div className="form-group">
+            <label><Palette size={16} /> Cor de Identificação</label>
+            <div className="color-selector">
+              {PRESET_COLORS.map(color => (
+                <div 
+                  key={color}
+                  className={`color-option ${formData.color === color ? 'active' : ''}`}
+                  style={{ backgroundColor: color }}
+                  onClick={() => setFormData({ ...formData, color })}
+                />
+              ))}
             </div>
           </div>
 

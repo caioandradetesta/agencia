@@ -186,3 +186,72 @@
   padding-left: 4px;
   font-weight: 500;
 }
+
+/* Filters Bar */
+.agenda-filters {
+  margin-bottom: 24px;
+  background-color: var(--bg-secondary);
+  padding: 12px 20px;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+}
+
+.filter-group {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.filter-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: var(--bg-primary);
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+}
+
+.filter-item select {
+  background: none;
+  border: none;
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 500;
+  outline: none;
+  cursor: pointer;
+}
+
+.clear-filters-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 600;
+  transition: color 0.2s;
+}
+
+.clear-filters-btn:hover {
+  color: #EF4444;
+}
+
+/* Task Indicator Dots */
+.task-indicators {
+  display: flex;
+  gap: 2px;
+  margin-right: 4px;
+}
+
+.mini-user-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  border: 1px solid rgba(0,0,0,0.1);
+}
+
+.calendar-task-card .task-title {
+  flex: 1;
+}

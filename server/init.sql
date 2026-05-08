@@ -124,3 +124,6 @@ ALTER TABLE tasks ADD COLUMN IF NOT EXISTS workflow_tag TEXT;
 
 -- Adicionar coluna de recorrência nas tarefas
 ALTER TABLE tasks ADD COLUMN IF NOT EXISTS recurrence TEXT; -- daily, weekly, monthly, quarterly
+
+-- Adicionar coluna de cor personalizada nos perfis
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS color TEXT DEFAULT '#6366F1';

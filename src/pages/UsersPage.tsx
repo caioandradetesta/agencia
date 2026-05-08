@@ -138,7 +138,7 @@ export const UsersPage: React.FC = () => {
                       <tr key={user.id}>
                         <td>
                           <div className="user-cell">
-                            <div className="u-avatar">
+                            <div className="u-avatar" style={{ backgroundColor: user.color || 'var(--accent-primary)' }}>
                               {user.avatar_url ? <img src={user.avatar_url} alt="" /> : user.full_name?.charAt(0)}
                             </div>
                             <div className="u-info">

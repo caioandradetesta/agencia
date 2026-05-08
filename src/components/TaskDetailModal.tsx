@@ -192,7 +192,9 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, onClose,
                     className={`assignee-item ${formData.assignee_ids.includes(u.user_id) ? 'selected' : ''}`}
                     onClick={() => toggleAssignee(u.user_id)}
                   >
-                    <div className="assignee-avatar">{u.full_name?.charAt(0)}</div>
+                    <div className="assignee-avatar" style={{ backgroundColor: u.color || 'var(--accent-primary)' }}>
+                      {u.full_name?.charAt(0)}
+                    </div>
                     <span className="assignee-name">{u.full_name}</span>
                   </div>
                 ))}
@@ -223,7 +225,9 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, onClose,
                   <div key={c.id} className={`comment-item ${c.user_id === currentUser?.id ? 'own' : ''}`}>
                     <div className="comment-header">
                       <div className="comment-user">
-                        <div className="c-avatar">{c.full_name?.charAt(0)}</div>
+                        <div className="c-avatar" style={{ backgroundColor: c.color || 'var(--accent-primary)' }}>
+                          {c.full_name?.charAt(0)}
+                        </div>
                         <span className="c-name">{c.full_name}</span>
                       </div>
                       <span className="c-date">{new Date(c.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span>

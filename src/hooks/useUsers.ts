@@ -9,6 +9,7 @@ export interface UserProfile {
   role: string;
   team_id?: string;
   team_name?: string;
+  color?: string;
   email?: string;
 }
 

@@ -46,7 +46,7 @@ router.post('/setup', async (req, res) => {
 // 2. Registro de novo usuário (por Admin)
 router.post('/register', async (req, res) => {
   try {
-    const { email, password, full_name, role, team_id } = req.body;
+    const { email, password, full_name, role, team_id, color } = req.body;
     
     // Verificar se já existe
     const exists = await db.query('SELECT id FROM users WHERE email = $1', [email]);
@@ -66,8 +66,8 @@ router.post('/register', async (req, res) => {
     const userId = userRes.rows[0].id;
     
     await db.query(
-      'INSERT INTO profiles (user_id, full_name, role, team_id) VALUES ($1, $2, $3, $4)',
-      [userId, full_name, role || 'member', team_id || null]
+      'INSERT INTO profiles (user_id, full_name, role, team_id, color) VALUES ($1, $2, $3, $4, $5)',
+      [userId, full_name, role || 'member', team_id || null, color || '#6366F1']
     );
     
     await db.query('COMMIT');

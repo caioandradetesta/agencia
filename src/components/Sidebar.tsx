@@ -15,6 +15,7 @@ import {
   Sun,
   LogOut
 } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 import './Sidebar.css';
 
 interface NavItem {
@@ -52,13 +53,13 @@ const navItems: NavItem[] = [
   { id: 'clients', label: 'Clientes', icon: <Users size={20} />, path: '/clients' },
   { id: 'users', label: 'Usuários', icon: <UserSquare2 size={20} />, path: '/users' },
   { id: 'contracts', label: 'Contratos', icon: <FileText size={20} />, path: '/contracts' },
-  { id: 'admin', label: 'Admin', icon: <Settings size={20} />, path: '/' },
 ];
 
 export const Sidebar: React.FC = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [expandedItems, setExpandedItems] = useState<string[]>(['projects']);
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
+  const { user, logout } = useAuth();
 
   const toggleTheme = () => {
     const newTheme = theme === 'light' ? 'dark' : 'light';
@@ -118,14 +119,29 @@ export const Sidebar: React.FC = () => {
       </nav>
 
       <div className="sidebar-footer">
-        <button className="footer-action" onClick={toggleTheme}>
-          {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
-          {!isCollapsed && <span>{theme === 'light' ? 'Escuro' : 'Claro'}</span>}
-        </button>
-        <button className="footer-action logout">
-          <LogOut size={20} />
-          {!isCollapsed && <span>Sair</span>}
-        </button>
+        <div className="user-profile-section">
+          <div 
+            className="user-avatar" 
+            style={{ backgroundColor: user?.profile?.color || 'var(--accent-primary)' }}
+          >
+            {user?.profile?.full_name?.charAt(0) || 'U'}
+          </div>
+          {!isCollapsed && (
+            <div className="user-info">
+              <span className="user-name">{user?.profile?.full_name}</span>
+              <span className="user-role">{user?.profile?.role}</span>
+            </div>
+          )}
+        </div>
+        
+        <div className="footer-actions">
+          <button className="footer-action" onClick={toggleTheme} title="Alternar Tema">
+            {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
+          </button>
+          <button className="footer-action logout" onClick={logout} title="Sair">
+            <LogOut size={18} />
+          </button>
+        </div>
       </div>
     </aside>
   );
