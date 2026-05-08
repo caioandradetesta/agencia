@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { NavLink } from 'react-router-dom';
 import { 
   LayoutDashboard, 
   CheckSquare, 
@@ -20,35 +21,38 @@ interface NavItem {
   id: string;
   label: string;
   icon: React.ReactNode;
-  subItems?: { id: string; label: string }[];
+  path: string;
+  subItems?: { id: string; label: string; path: string }[];
 }
 
 const navItems: NavItem[] = [
   { 
+    id: 'dashboard', 
+    label: 'Dashboard', 
+    icon: <LayoutDashboard size={20} />,
+    path: '/'
+  },
+  { 
     id: 'projects', 
     label: 'Projetos', 
     icon: <LayoutDashboard size={20} />,
+    path: '/projects',
     subItems: [
-      { id: 'all-projects', label: 'Todos os Projetos' },
-      { id: 'new-project', label: 'Novo Projeto' },
-      { id: 'templates', label: 'Modelos' }
+      { id: 'all-projects', label: 'Todos os Projetos', path: '/projects' },
+      { id: 'new-project', label: 'Novo Projeto', path: '/projects' }
     ]
   },
   { 
     id: 'tasks', 
     label: 'Tarefas', 
     icon: <CheckSquare size={20} />,
-    subItems: [
-      { id: 'my-tasks', label: 'Minhas Tarefas' },
-      { id: 'kanban', label: 'Quadro Kanban' },
-      { id: 'backlog', label: 'Backlog' }
-    ]
+    path: '/tasks'
   },
-  { id: 'agenda', label: 'Agenda', icon: <Calendar size={20} /> },
-  { id: 'clients', label: 'Clientes', icon: <Users size={20} /> },
-  { id: 'users', label: 'Usuários', icon: <UserSquare2 size={20} /> },
-  { id: 'contracts', label: 'Contratos', icon: <FileText size={20} /> },
-  { id: 'admin', label: 'Admin', icon: <Settings size={20} /> },
+  { id: 'agenda', label: 'Agenda', icon: <Calendar size={20} />, path: '/' },
+  { id: 'clients', label: 'Clientes', icon: <Users size={20} />, path: '/clients' },
+  { id: 'users', label: 'Usuários', icon: <UserSquare2 size={20} />, path: '/users' },
+  { id: 'contracts', label: 'Contratos', icon: <FileText size={20} />, path: '/contracts' },
+  { id: 'admin', label: 'Admin', icon: <Settings size={20} />, path: '/' },
 ];
 
 export const Sidebar: React.FC = () => {
@@ -62,7 +66,8 @@ export const Sidebar: React.FC = () => {
     document.documentElement.setAttribute('data-theme', newTheme);
   };
 
-  const toggleExpand = (id: string) => {
+  const toggleExpand = (e: React.MouseEvent, id: string) => {
+    e.preventDefault();
     if (isCollapsed) {
       setIsCollapsed(false);
       setExpandedItems([id]);
@@ -85,9 +90,10 @@ export const Sidebar: React.FC = () => {
       <nav className="sidebar-nav">
         {navItems.map((item) => (
           <div key={item.id} className="nav-group">
-            <button 
-              className={`nav-item ${expandedItems.includes(item.id) ? 'active' : ''}`}
-              onClick={() => item.subItems ? toggleExpand(item.id) : null}
+            <NavLink 
+              to={item.path}
+              className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+              onClick={(e) => item.subItems ? toggleExpand(e, item.id) : null}
             >
               <span className="nav-icon">{item.icon}</span>
               {!isCollapsed && <span className="nav-label">{item.label}</span>}
@@ -96,14 +102,14 @@ export const Sidebar: React.FC = () => {
                   <ChevronDown size={16} />
                 </span>
               )}
-            </button>
+            </NavLink>
 
             {!isCollapsed && item.subItems && expandedItems.includes(item.id) && (
               <div className="sub-nav">
                 {item.subItems.map(sub => (
-                  <button key={sub.id} className="sub-nav-item">
+                  <NavLink key={sub.id} to={sub.path} className="sub-nav-item">
                     {sub.label}
-                  </button>
+                  </NavLink>
                 ))}
               </div>
             )}
