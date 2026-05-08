@@ -77,17 +77,7 @@ export const BoardSettingsModal: React.FC<BoardSettingsModalProps> = ({ onClose,
     }));
   };
 
-  const handleUpdateColumnResponsibles = async (colId: string, userIds: string[]) => {
-    try {
-      await api.patch(`/api/kanban-columns/${colId}`, {
-        responsible_user_ids: userIds
-      });
-      fetchColumns();
-      onSuccess();
-    } catch (err) {
-      alert('Erro ao atualizar responsáveis');
-    }
-  };
+
 
   const toggleResponsibleForExisting = async (col: Column, userId: string) => {
     const currentIds = col.responsible_user_ids || [];
