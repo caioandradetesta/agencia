@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Loader2, FileText, Building2, Briefcase, DollarSign, Upload } from 'lucide-react';
 import { api } from '../lib/api';
 import { uploadFile } from '../lib/storage';
@@ -63,7 +64,7 @@ export const AddContractModal: React.FC<AddContractModalProps> = ({ onClose, onS
     }
   };
 
-  return (
+  return createPortal(
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content animate-fade-in" onClick={e => e.stopPropagation()}>
         <div className="modal-header">
@@ -136,6 +137,7 @@ export const AddContractModal: React.FC<AddContractModalProps> = ({ onClose, onS
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };

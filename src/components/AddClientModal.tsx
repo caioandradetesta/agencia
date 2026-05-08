@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { X, User, Mail, Building2, Phone, Image, Loader2 } from 'lucide-react';
 import { api } from '../lib/api';
 import { uploadFile } from '../lib/storage';
+import { maskPhone } from '../utils/masks';
 import './Modal.css';
 
 interface AddClientModalProps {
@@ -45,7 +46,7 @@ export const AddClientModal: React.FC<AddClientModalProps> = ({ onClose, onSucce
     }
   };
 
-  return (
+  return createPortal(
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content animate-fade-in" onClick={e => e.stopPropagation()}>
         <div className="modal-header">
@@ -82,7 +83,7 @@ export const AddClientModal: React.FC<AddClientModalProps> = ({ onClose, onSucce
                 type="text" 
                 placeholder="(00) 00000-0000"
                 value={formData.phone}
-                onChange={e => setFormData({ ...formData, phone: e.target.value })}
+                onChange={e => setFormData({ ...formData, phone: maskPhone(e.target.value) })}
               />
             </div>
           </div>
@@ -117,6 +118,7 @@ export const AddClientModal: React.FC<AddClientModalProps> = ({ onClose, onSucce
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };

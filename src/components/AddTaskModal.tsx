@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Loader2, Type, AlignLeft, Flag, Calendar } from 'lucide-react';
 import { useTasks } from '../hooks/useTasks';
 import './Modal.css';
@@ -34,7 +35,7 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ onClose, onSuccess }
     }
   };
 
-  return (
+  return createPortal(
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content animate-fade-in" onClick={e => e.stopPropagation()}>
         <div className="modal-header">
@@ -94,6 +95,7 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ onClose, onSuccess }
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
