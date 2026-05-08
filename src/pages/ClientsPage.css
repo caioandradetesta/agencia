@@ -249,3 +249,42 @@
 .loading-state .animate-spin {
   color: var(--accent-primary);
 }
+
+/* Client Card Header Actions */
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+}
+
+.card-header-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.icon-btn {
+  padding: 6px;
+  border-radius: 8px;
+  background-color: var(--bg-tertiary);
+  color: var(--text-muted);
+  transition: all 0.2s;
+  border: 1px solid var(--border-color);
+}
+
+.icon-btn:hover {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+.icon-btn.delete:hover {
+  color: #EF4444;
+  background-color: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.2);
+}
+
+.icon-btn.edit:hover {
+  color: var(--accent-primary);
+  background-color: rgba(99, 102, 241, 0.1);
+  border-color: rgba(99, 102, 241, 0.2);
+}

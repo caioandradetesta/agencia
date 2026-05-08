@@ -5,18 +5,36 @@ import {
   Mail, 
   Phone, 
   ExternalLink, 
-  MoreVertical,
   Search,
   Filter,
-  Loader2
+  Loader2,
+  Trash2,
+  Edit3
 } from 'lucide-react';
 import { useClients } from '../hooks/useClients';
 import { AddClientModal } from '../components/AddClientModal';
+import { api } from '../lib/api';
 import './ClientsPage.css';
 
 export const ClientsPage: React.FC = () => {
   const { clients, loading, error, refresh } = useClients();
   const [showModal, setShowModal] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const handleDeleteClient = async (id: string, name: string) => {
+    if (!confirm(`Tem certeza que deseja excluir o cliente "${name}"?`)) return;
+    try {
+      await api.delete(`/api/clients/${id}`);
+      refresh();
+    } catch (err: any) {
+      alert('Erro ao excluir cliente: ' + err.message);
+    }
+  };
+
+  const filteredClients = clients.filter(c => 
+    c.company?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    c.name?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <div className="clients-page animate-fade-in">
@@ -35,7 +53,12 @@ export const ClientsPage: React.FC = () => {
         <div className="grid-controls">
           <div className="search-box">
             <Search size={18} />
-            <input type="text" placeholder="Buscar clientes..." />
+            <input 
+              type="text" 
+              placeholder="Buscar clientes..." 
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+            />
           </div>
           <button className="filter-btn"><Filter size={18} /> Filtros</button>
         </div>
@@ -51,13 +74,22 @@ export const ClientsPage: React.FC = () => {
           </div>
         ) : (
           <div className="clients-cards">
-            {clients.map(client => (
+            {filteredClients.map(client => (
               <div key={client.id} className="client-card">
                 <div className="card-header">
                   <div className="client-logo">
                     {client.logo_url ? <img src={client.logo_url} alt="" /> : <Building2 size={24} />}
                   </div>
-                  <button className="more-btn"><MoreVertical size={20} /></button>
+                  <div className="card-header-actions">
+                    <button className="icon-btn edit" title="Editar"><Edit3 size={16} /></button>
+                    <button 
+                      className="icon-btn delete" 
+                      title="Excluir"
+                      onClick={() => handleDeleteClient(client.id, client.company)}
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
                 </div>
                 
                 <div className="card-body">
@@ -67,24 +99,24 @@ export const ClientsPage: React.FC = () => {
                   <div className="contact-info">
                     <div className="info-item">
                       <Mail size={14} />
-                      <span>{client.email}</span>
+                      <span>{client.email || 'N/A'}</span>
                     </div>
                     <div className="info-item">
                       <Phone size={14} />
-                      <span>{client.phone}</span>
+                      <span>{client.phone || 'N/A'}</span>
                     </div>
                   </div>
 
                   <div className="card-footer">
                     <div className="projects-badge">
-                      -- Projetos
+                      Parceiro Ativo
                     </div>
                     <span className="status-dot ativo">Ativo</span>
                   </div>
                 </div>
                 
                 <div className="card-actions">
-                  <button className="view-profile">Ver Perfil <ExternalLink size={14} /></button>
+                  <button className="view-profile">Ver Projetos <ExternalLink size={14} /></button>
                 </div>
               </div>
             ))}

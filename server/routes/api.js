@@ -28,6 +28,32 @@ router.post('/clients', async (req, res) => {
   }
 });
 
+// Editar cliente
+router.patch('/clients/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, email, company, phone, logo_url } = req.body;
+    const { rows } = await db.query(
+      'UPDATE clients SET name = $1, email = $2, company = $3, phone = $4, logo_url = $5 WHERE id = $6 RETURNING *',
+      [name, email, company, phone, logo_url, id]
+    );
+    res.json(rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Excluir cliente
+router.delete('/clients/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    await db.query('DELETE FROM clients WHERE id = $1', [id]);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // --- PROJETOS ---
 
 router.get('/projects', async (req, res) => {
@@ -81,7 +107,6 @@ router.patch('/tasks/:id', async (req, res) => {
     await db.query('BEGIN');
 
     // Atualização dos campos básicos (incluindo workflow_tag e recurrence)
-    // Usamos uma lógica que permite anular campos se vierem vazios ou nulos
     const { rows } = await db.query(
       `UPDATE tasks 
        SET status = $1, 
