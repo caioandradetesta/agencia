@@ -231,25 +231,28 @@ router.patch('/tasks/:id', async (req, res) => {
     if (status) {
       console.log(`🔍 [Automação] Buscando config para coluna: "${status}"`);
       const { rows: colConfig } = await db.query(
-        'SELECT responsible_user_id, title FROM kanban_columns WHERE slug ILIKE $1',
+        'SELECT responsible_user_ids, title FROM kanban_columns WHERE slug ILIKE $1',
         [status]
       );
 
-      if (colConfig.length > 0 && colConfig[0].responsible_user_id) {
-        const autoUserId = colConfig[0].responsible_user_id;
-        console.log(`✅ [Automação] Responsável encontrado: ${autoUserId} para estágio "${colConfig[0].title}"`);
+      if (colConfig.length > 0 && colConfig[0].responsible_user_ids && colConfig[0].responsible_user_ids.length > 0) {
+        const autoUserIds = colConfig[0].responsible_user_ids;
+        console.log(`✅ [Automação] ${autoUserIds.length} responsáveis encontrados para estágio "${colConfig[0].title}"`);
         
-        await db.query(`
-          INSERT INTO task_assignments (task_id, user_id) 
-          VALUES ($1, $2) 
-          ON CONFLICT (task_id, user_id) DO NOTHING
-        `, [id, autoUserId]);
+        for (const autoUserId of autoUserIds) {
+          await db.query(`
+            INSERT INTO task_assignments (task_id, user_id) 
+            VALUES ($1, $2) 
+            ON CONFLICT (task_id, user_id) DO NOTHING
+          `, [id, autoUserId]);
+        }
 
+        // Enviar notificação apenas para o primeiro (ou poderíamos fazer para todos)
         await db.query(`
           INSERT INTO notifications (user_id, title, content)
           VALUES ($1, $2, $3)
         `, [
-          autoUserId, 
+          autoUserIds[0], 
           `Nova Atribuição Automática`, 
           `Tarefa "${rows[0].title}" movida para o estágio "${colConfig[0].title}".`
         ]);

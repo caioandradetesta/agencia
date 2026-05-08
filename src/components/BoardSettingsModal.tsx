@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Layout, Plus, Trash2, Palette, Loader2, User as UserIcon } from 'lucide-react';
+import { X, Layout, Plus, Trash2, Palette, Loader2, User as UserIcon, Check } from 'lucide-react';
 import { api } from '../lib/api';
 import { useUsers } from '../hooks/useUsers';
 import './Modal.css';
@@ -16,6 +16,7 @@ interface Column {
   slug: string;
   color: string;
   responsible_user_id: string | null;
+  responsible_user_ids: string[];
   responsible_name?: string;
   responsible_color?: string;
 }
@@ -30,7 +31,7 @@ export const BoardSettingsModal: React.FC<BoardSettingsModalProps> = ({ onClose,
     title: '',
     slug: '',
     color: '#6366F1',
-    responsible_user_id: ''
+    responsible_user_ids: [] as string[]
   });
 
   useEffect(() => {
@@ -55,9 +56,9 @@ export const BoardSettingsModal: React.FC<BoardSettingsModalProps> = ({ onClose,
       await api.post('/api/kanban-columns', {
         ...newCol,
         sort_order: columns.length,
-        responsible_user_id: newCol.responsible_user_id || null
+        responsible_user_ids: newCol.responsible_user_ids
       });
-      setNewCol({ title: '', slug: '', color: '#6366F1', responsible_user_id: '' });
+      setNewCol({ title: '', slug: '', color: '#6366F1', responsible_user_ids: [] });
       fetchColumns();
       onSuccess();
     } catch (err) {
@@ -67,16 +68,33 @@ export const BoardSettingsModal: React.FC<BoardSettingsModalProps> = ({ onClose,
     }
   };
 
-  const handleUpdateColumnResponsible = async (colId: string, userId: string) => {
+  const toggleResponsibleForNew = (userId: string) => {
+    setNewCol(prev => ({
+      ...prev,
+      responsible_user_ids: prev.responsible_user_ids.includes(userId)
+        ? prev.responsible_user_ids.filter(id => id !== userId)
+        : [...prev.responsible_user_ids, userId]
+    }));
+  };
+
+  const handleUpdateColumnResponsibles = async (colId: string, userIds: string[]) => {
     try {
       await api.patch(`/api/kanban-columns/${colId}`, {
-        responsible_user_id: userId || null
+        responsible_user_ids: userIds
       });
       fetchColumns();
       onSuccess();
     } catch (err) {
-      alert('Erro ao atualizar responsável');
+      alert('Erro ao atualizar responsáveis');
     }
+  };
+
+  const toggleResponsibleForExisting = (col: Column, userId: string) => {
+    const currentIds = col.responsible_user_ids || [];
+    const newIds = currentIds.includes(userId)
+      ? currentIds.filter(id => id !== userId)
+      : [...currentIds, userId];
+    handleUpdateColumnResponsibles(col.id, newIds);
   };
 
   const handleDeleteColumn = async (id: string, title: string) => {
@@ -95,8 +113,8 @@ export const BoardSettingsModal: React.FC<BoardSettingsModalProps> = ({ onClose,
       <div className="modal-content workflow-modal animate-fade-in" onClick={e => e.stopPropagation()}>
         <div className="modal-header">
           <div className="header-info-modal">
-            <h2>Configurar Colunas e Responsáveis</h2>
-            <p>Defina as etapas do projeto e quem assume as tarefas em cada fase.</p>
+            <h2>Configurar Fluxo e Responsáveis</h2>
+            <p>Defina as etapas e múltiplos usuários para automação de tarefas.</p>
           </div>
           <button className="close-btn" onClick={onClose}><X size={20} /></button>
         </div>
@@ -119,17 +137,22 @@ export const BoardSettingsModal: React.FC<BoardSettingsModalProps> = ({ onClose,
                   required
                 />
               </div>
-              <div className="form-group flex-2">
-                <label><UserIcon size={14} /> Responsável Automático</label>
-                <select 
-                  value={newCol.responsible_user_id}
-                  onChange={e => setNewCol({ ...newCol, responsible_user_id: e.target.value })}
-                >
-                  <option value="">Ninguém (Manual)</option>
-                  {users.map(u => (
-                    <option key={u.user_id} value={u.user_id}>{u.full_name}</option>
-                  ))}
-                </select>
+            </div>
+
+            <div className="form-group">
+              <label><UserIcon size={14} /> Atribuir Responsáveis Automáticos (Múltiplos)</label>
+              <div className="user-selection-grid">
+                {users.map(u => (
+                  <div 
+                    key={u.user_id} 
+                    className={`user-pill-choice ${newCol.responsible_user_ids.includes(u.user_id) ? 'active' : ''}`}
+                    onClick={() => toggleResponsibleForNew(u.user_id)}
+                  >
+                    <div className="u-avatar-mini" style={{ backgroundColor: u.color }}>{u.full_name.charAt(0)}</div>
+                    <span>{u.full_name}</span>
+                    {newCol.responsible_user_ids.includes(u.user_id) && <Check size={12} />}
+                  </div>
+                ))}
               </div>
             </div>
 
@@ -163,17 +186,20 @@ export const BoardSettingsModal: React.FC<BoardSettingsModalProps> = ({ onClose,
                     <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>/{col.slug}</span>
                   </div>
                   
-                  <div className="stage-responsible-select">
-                    <UserIcon size={12} />
-                    <select 
-                      value={col.responsible_user_id || ''}
-                      onChange={(e) => handleUpdateColumnResponsible(col.id, e.target.value)}
-                    >
-                      <option value="">Sem responsável automático</option>
+                  <div className="stage-responsibles-config">
+                    <label>Responsáveis:</label>
+                    <div className="responsibles-toggles">
                       {users.map(u => (
-                        <option key={u.user_id} value={u.user_id}>Atribuir a: {u.full_name}</option>
+                        <div 
+                          key={u.user_id}
+                          className={`res-toggle-mini ${col.responsible_user_ids?.includes(u.user_id) ? 'active' : ''}`}
+                          onClick={() => toggleResponsibleForExisting(col, u.user_id)}
+                          title={u.full_name}
+                        >
+                          {u.full_name.charAt(0)}
+                        </div>
                       ))}
-                    </select>
+                    </div>
                   </div>
                 </div>
                 <button className="delete-stage-btn" onClick={() => handleDeleteColumn(col.id, col.title)}>
@@ -185,7 +211,7 @@ export const BoardSettingsModal: React.FC<BoardSettingsModalProps> = ({ onClose,
         </div>
 
         <div className="modal-actions">
-          <button className="submit-btn" onClick={onClose}>Salvar e Sair</button>
+          <button className="submit-btn" onClick={onClose}>Concluir Configuração</button>
         </div>
       </div>
     </div>,

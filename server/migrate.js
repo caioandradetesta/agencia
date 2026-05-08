@@ -57,9 +57,10 @@ async function migrate() {
         color TEXT DEFAULT '#6366F1',
         sort_order INTEGER DEFAULT 0,
         responsible_user_id UUID REFERENCES profiles(user_id),
+        responsible_user_ids UUID[] DEFAULT '{}',
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       );
-    `, 'Tabela kanban_columns (Fallback)');
+    `, 'Tabela kanban_columns (V7)');
 
     console.log('✅ Migração V6 finalizada!');
   } catch (err) {
