@@ -38,14 +38,32 @@ export const AgendaPage: React.FC = () => {
   }
 
   const getTasksForDay = (day: number) => {
+    const targetDate = new Date(year, month, day);
+    
     return tasks.filter(task => {
       if (!task.due_date) return false;
       const taskDate = new Date(task.due_date);
-      return (
-        taskDate.getDate() === day &&
-        taskDate.getMonth() === month &&
-        taskDate.getFullYear() === year
-      );
+      taskDate.setHours(0, 0, 0, 0);
+      targetDate.setHours(0, 0, 0, 0);
+      
+      // Mesma data exata
+      const isExactMatch = taskDate.getTime() === targetDate.getTime();
+
+      if (isExactMatch) return true;
+
+      // Se não for exato, checa se é uma recorrência de uma tarefa passada
+      if (task.recurrence && taskDate < targetDate) {
+        const diffTime = targetDate.getTime() - taskDate.getTime();
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        
+        if (task.recurrence === 'daily') return true;
+        if (task.recurrence === 'weekly') return diffDays % 7 === 0;
+        if (task.recurrence === 'monthly') {
+          return taskDate.getDate() === day;
+        }
+      }
+
+      return false;
     });
   };
 

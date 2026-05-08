@@ -75,14 +75,22 @@ router.get('/tasks', async (req, res) => {
 router.patch('/tasks/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { status, title, description, priority, due_date, assignee_ids } = req.body;
+    const { status, title, description, priority, due_date, assignee_ids, workflow_tag, recurrence } = req.body;
     
     await db.query('BEGIN');
 
-    // Atualização dos campos básicos
+    // Atualização dos campos básicos (incluindo workflow_tag e recurrence)
     const { rows } = await db.query(
-      'UPDATE tasks SET status = COALESCE($1, status), title = COALESCE($2, title), description = COALESCE($3, description), priority = COALESCE($4, priority), due_date = COALESCE($5, due_date) WHERE id = $6 RETURNING *',
-      [status, title, description, priority, due_date, id]
+      `UPDATE tasks 
+       SET status = COALESCE($1, status), 
+           title = COALESCE($2, title), 
+           description = COALESCE($3, description), 
+           priority = COALESCE($4, priority), 
+           due_date = COALESCE($5, due_date),
+           workflow_tag = COALESCE($6, workflow_tag),
+           recurrence = COALESCE($7, recurrence)
+       WHERE id = $8 RETURNING *`,
+      [status, title, description, priority, due_date, workflow_tag, recurrence, id]
     );
 
     // Sincronização dos responsáveis (se enviados)
@@ -97,9 +105,7 @@ router.patch('/tasks/:id', async (req, res) => {
     }
 
     // --- AUTOMAÇÃO DE WORKFLOW ---
-    const { workflow_tag } = req.body;
     if (workflow_tag) {
-      // 1. Buscar se existe configuração para esta tag
       const { rows: config } = await db.query(
         'SELECT user_id FROM workflow_configs WHERE tag_name = $1',
         [workflow_tag]
@@ -107,15 +113,12 @@ router.patch('/tasks/:id', async (req, res) => {
 
       if (config.length > 0) {
         const autoUserId = config[0].user_id;
-
-        // 2. Adicionar o usuário à tarefa (se não estiver)
         await db.query(`
           INSERT INTO task_assignments (task_id, user_id) 
           VALUES ($1, $2) 
           ON CONFLICT (task_id, user_id) DO NOTHING
         `, [id, autoUserId]);
 
-        // 3. Criar Notificação
         await db.query(`
           INSERT INTO notifications (user_id, title, content)
           VALUES ($1, $2, $3)
@@ -127,8 +130,6 @@ router.patch('/tasks/:id', async (req, res) => {
       }
     }
     
-    await db.query('COMMIT');
-
     // --- AUTOMAÇÃO DE RECORRÊNCIA ---
     if (status === 'done' && rows[0].recurrence) {
       const task = rows[0];
@@ -139,19 +140,22 @@ router.patch('/tasks/:id', async (req, res) => {
       else if (task.recurrence === 'monthly') nextDueDate.setMonth(nextDueDate.getMonth() + 1);
       else if (task.recurrence === 'quarterly') nextDueDate.setMonth(nextDueDate.getMonth() + 3);
 
-      // Criar a nova instância da tarefa
-      const { rows: newTask } = await db.query(
-        'INSERT INTO tasks (project_id, title, description, status, priority, due_date, recurrence, workflow_tag) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',
-        [task.project_id, task.title, task.description, 'todo', task.priority, nextDueDate, task.recurrence, task.workflow_tag]
-      );
+      try {
+        const { rows: newTask } = await db.query(
+          'INSERT INTO tasks (project_id, title, description, status, priority, due_date, recurrence, workflow_tag) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',
+          [task.project_id || null, task.title, task.description || '', 'todo', task.priority || 'medium', nextDueDate, task.recurrence, task.workflow_tag || null]
+        );
 
-      // Copiar os responsáveis
-      const { rows: assignees } = await db.query('SELECT user_id FROM task_assignments WHERE task_id = $1', [id]);
-      for (const a of assignees) {
-        await db.query('INSERT INTO task_assignments (task_id, user_id) VALUES ($1, $2)', [newTask[0].id, a.user_id]);
+        const { rows: assignees } = await db.query('SELECT user_id FROM task_assignments WHERE task_id = $1', [id]);
+        for (const a of assignees) {
+          await db.query('INSERT INTO task_assignments (task_id, user_id) VALUES ($1, $2)', [newTask[0].id, a.user_id]);
+        }
+      } catch (recurrenceErr) {
+        console.error('Erro ao processar recorrência:', recurrenceErr);
       }
     }
-    
+
+    await db.query('COMMIT');
     res.json(rows[0]);
   } catch (err) {
     await db.query('ROLLBACK');
@@ -239,7 +243,6 @@ router.post('/tasks/:id/comments', async (req, res) => {
       [id, user_id, content]
     );
     
-    // Retornar com dados do perfil para atualizar UI instantaneamente
     const { rows: fullComment } = await db.query(`
       SELECT tc.*, p.full_name, p.avatar_url 
       FROM task_comments tc
@@ -255,13 +258,13 @@ router.post('/tasks/:id/comments', async (req, res) => {
 
 router.post('/tasks', async (req, res) => {
   try {
-    const { project_id, title, status, description, priority, due_date, assignee_ids } = req.body;
+    const { project_id, title, status, description, priority, due_date, assignee_ids, recurrence } = req.body;
     
     await db.query('BEGIN');
     
     const { rows } = await db.query(
-      'INSERT INTO tasks (project_id, title, status, description, priority, due_date) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
-      [project_id, title, status || 'todo', description, priority || 'medium', due_date || null]
+      'INSERT INTO tasks (project_id, title, status, description, priority, due_date, recurrence) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
+      [project_id || null, title, status || 'todo', description || '', priority || 'medium', due_date || null, recurrence || null]
     );
     
     const task = rows[0];
