@@ -14,6 +14,7 @@ export interface Task {
   recurrence?: string;
   profiles?: any;
   assignees?: any[];
+  created_at: string;
 }
 
 export const useTasks = () => {
