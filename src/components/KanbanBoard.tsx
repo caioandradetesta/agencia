@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { MoreVertical, Plus, Clock, MessageSquare, Loader2 } from 'lucide-react';
 import { useTasks } from '../hooks/useTasks';
 import { AddTaskModal } from './AddTaskModal';
+import { TaskDetailModal } from './TaskDetailModal';
 import './KanbanBoard.css';
 
 const COLUMN_MAP = [
@@ -13,7 +14,8 @@ const COLUMN_MAP = [
 
 export const KanbanBoard: React.FC = () => {
   const { tasks, loading, updateTaskStatus, refresh } = useTasks();
-  const [showModal, setShowModal] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [selectedTask, setSelectedTask] = useState<any>(null);
 
   const getPriorityLabel = (priority?: string) => {
     const map: Record<string, string> = {
@@ -41,7 +43,7 @@ export const KanbanBoard: React.FC = () => {
     <div className="kanban-container">
       <div className="kanban-header">
         <h2>Quadro de Tarefas</h2>
-        <button className="add-task-btn" onClick={() => setShowModal(true)}>
+        <button className="add-task-btn" onClick={() => setShowAddModal(true)}>
           <Plus size={18} />
           Nova Tarefa
         </button>
@@ -79,6 +81,7 @@ export const KanbanBoard: React.FC = () => {
                     className="task-card animate-fade-in"
                     draggable
                     onDragStart={(e) => handleDragStart(e, task.id)}
+                    onClick={() => setSelectedTask(task)}
                   >
                     <div className="task-priority">
                       <span className={`priority-tag ${task.priority}`}>
@@ -118,7 +121,7 @@ export const KanbanBoard: React.FC = () => {
                   <div className="empty-column-hint">Arrastar aqui</div>
                 )}
 
-                <button className="column-add-btn" onClick={() => setShowModal(true)}>
+                <button className="column-add-btn" onClick={() => setShowAddModal(true)}>
                   <Plus size={16} />
                   Adicionar item
                 </button>
@@ -128,9 +131,17 @@ export const KanbanBoard: React.FC = () => {
         </div>
       )}
 
-      {showModal && (
+      {showAddModal && (
         <AddTaskModal 
-          onClose={() => setShowModal(false)} 
+          onClose={() => setShowAddModal(false)} 
+          onSuccess={refresh}
+        />
+      )}
+
+      {selectedTask && (
+        <TaskDetailModal 
+          task={selectedTask}
+          onClose={() => setSelectedTask(null)}
           onSuccess={refresh}
         />
       )}

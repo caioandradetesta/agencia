@@ -26,6 +26,11 @@
   --status-doing: #3B82F6;
   --status-review: #F59E0B;
   --status-done: #10B981;
+
+  --status-todo-soft: #F1F5F9;
+  --status-doing-soft: #EFF6FF;
+  --status-review-soft: #FFFBEB;
+  --status-done-soft: #ECFDF5;
 }
 
 [data-theme='dark'] {
@@ -43,6 +48,11 @@
 
   --border-color: #334155;
   --card-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.5);
+
+  --status-todo-soft: rgba(100, 116, 139, 0.1);
+  --status-doing-soft: rgba(59, 130, 246, 0.1);
+  --status-review-soft: rgba(245, 158, 11, 0.1);
+  --status-done-soft: rgba(16, 185, 129, 0.1);
 }
 
 * {

@@ -75,14 +75,71 @@ router.get('/tasks', async (req, res) => {
 router.patch('/tasks/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { status, title, description } = req.body;
+    const { status, title, description, priority, due_date, assignee_ids } = req.body;
     
-    // Atualização dinâmica baseada nos campos enviados
+    await db.query('BEGIN');
+
+    // Atualização dos campos básicos
     const { rows } = await db.query(
-      'UPDATE tasks SET status = COALESCE($1, status), title = COALESCE($2, title), description = COALESCE($3, description) WHERE id = $4 RETURNING *',
-      [status, title, description, id]
+      'UPDATE tasks SET status = COALESCE($1, status), title = COALESCE($2, title), description = COALESCE($3, description), priority = COALESCE($4, priority), due_date = COALESCE($5, due_date) WHERE id = $6 RETURNING *',
+      [status, title, description, priority, due_date, id]
     );
+
+    // Sincronização dos responsáveis (se enviados)
+    if (assignee_ids && Array.isArray(assignee_ids)) {
+      await db.query('DELETE FROM task_assignments WHERE task_id = $1', [id]);
+      for (const userId of assignee_ids) {
+        await db.query(
+          'INSERT INTO task_assignments (task_id, user_id) VALUES ($1, $2)',
+          [id, userId]
+        );
+      }
+    }
+    
+    await db.query('COMMIT');
     res.json(rows[0]);
+  } catch (err) {
+    await db.query('ROLLBACK');
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// --- COMENTÁRIOS ---
+
+router.get('/tasks/:id/comments', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { rows } = await db.query(`
+      SELECT tc.*, p.full_name, p.avatar_url 
+      FROM task_comments tc
+      JOIN profiles p ON tc.user_id = p.user_id
+      WHERE tc.task_id = $1
+      ORDER BY tc.created_at ASC
+    `, [id]);
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/tasks/:id/comments', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { user_id, content } = req.body;
+    const { rows } = await db.query(
+      'INSERT INTO task_comments (task_id, user_id, content) VALUES ($1, $2, $3) RETURNING *',
+      [id, user_id, content]
+    );
+    
+    // Retornar com dados do perfil para atualizar UI instantaneamente
+    const { rows: fullComment } = await db.query(`
+      SELECT tc.*, p.full_name, p.avatar_url 
+      FROM task_comments tc
+      JOIN profiles p ON tc.user_id = p.user_id
+      WHERE tc.id = $1
+    `, [rows[0].id]);
+    
+    res.json(fullComment[0]);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

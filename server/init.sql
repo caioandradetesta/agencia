@@ -93,3 +93,12 @@ CREATE TABLE IF NOT EXISTS task_assignments (
   user_id UUID REFERENCES users(id) ON DELETE CASCADE,
   PRIMARY KEY (task_id, user_id)
 );
+
+-- 10. Comentários em Tarefas
+CREATE TABLE IF NOT EXISTS task_comments (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  task_id UUID REFERENCES tasks(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  content TEXT NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
