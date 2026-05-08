@@ -43,7 +43,43 @@ router.post('/setup', async (req, res) => {
   }
 });
 
-// 2. Login
+// 2. Registro de novo usuário (por Admin)
+router.post('/register', async (req, res) => {
+  try {
+    const { email, password, full_name, role, team_id } = req.body;
+    
+    // Verificar se já existe
+    const exists = await db.query('SELECT id FROM users WHERE email = $1', [email]);
+    if (exists.rows.length > 0) {
+      return res.status(400).json({ error: 'Este e-mail já está cadastrado.' });
+    }
+
+    const hashedPassword = await bcrypt.hash(password || 'agencia123', 10);
+    
+    await db.query('BEGIN');
+    
+    const userRes = await db.query(
+      'INSERT INTO users (email, password) VALUES ($1, $2) RETURNING id',
+      [email, hashedPassword]
+    );
+    
+    const userId = userRes.rows[0].id;
+    
+    await db.query(
+      'INSERT INTO profiles (user_id, full_name, role, team_id) VALUES ($1, $2, $3, $4)',
+      [userId, full_name, role || 'member', team_id || null]
+    );
+    
+    await db.query('COMMIT');
+    
+    res.json({ message: 'Usuário cadastrado com sucesso!' });
+  } catch (err) {
+    await db.query('ROLLBACK');
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 3. Login
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;

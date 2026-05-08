@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { X, Loader2, User, Mail, Shield, Users as UsersIcon } from 'lucide-react';
 import { api } from '../lib/api';
+import { useTeams } from '../hooks/useTeams';
 import './Modal.css';
 
 interface AddUserModalProps {
@@ -10,7 +11,7 @@ interface AddUserModalProps {
 
 export const AddUserModal: React.FC<AddUserModalProps> = ({ onClose, onSuccess }) => {
   const [loading, setLoading] = useState(false);
-  const [teams, setTeams] = useState<{ id: string, name: string }[]>([]);
+  const { teams } = useTeams();
   const [formData, setFormData] = useState({
     email: '',
     full_name: '',
@@ -18,26 +19,13 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({ onClose, onSuccess }
     team_id: ''
   });
 
-  useEffect(() => {
-    const fetchTeams = async () => {
-      try {
-        const response = await api.get('/api/teams');
-        setTeams(response.data);
-      } catch (err) {
-        console.error('Erro ao buscar equipes:', err);
-      }
-    };
-    fetchTeams();
-  }, []);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      // Nota: Em um sistema real, o cadastro de novos membros exigiria 
-      // uma rota de convite ou criação de conta no backend.
-      const response = await api.post('/api/users', formData);
+      // Usar a rota de auth para registrar no banco local
+      const response = await api.post('/api/auth/register', formData);
 
       if (response.data) {
         onSuccess();

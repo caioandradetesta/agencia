@@ -74,12 +74,44 @@
 }
 
 .table-controls {
-  padding: 20px;
+  padding: 16px 20px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   border-bottom: 1px solid var(--border-color);
   gap: 20px;
+}
+
+.tabs {
+  display: flex;
+  gap: 8px;
+  background-color: var(--bg-primary);
+  padding: 4px;
+  border-radius: 10px;
+  border: 1px solid var(--border-color);
+}
+
+.tab-btn {
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  transition: all 0.2s;
+}
+
+.tab-btn.active {
+  background-color: var(--bg-secondary);
+  color: var(--accent-primary);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.filter-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex: 1;
+  justify-content: flex-end;
 }
 
 .search-bar {
@@ -251,4 +283,31 @@
   padding: 8px 16px;
   border-radius: 8px;
   margin-top: 8px;
+}
+
+.team-info-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.team-icon {
+  width: 32px;
+  height: 32px;
+  background-color: var(--bg-tertiary);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent-primary);
+}
+
+.team-name-bold {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.action-buttons {
+  display: flex;
+  gap: 8px;
 }
