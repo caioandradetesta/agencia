@@ -112,10 +112,11 @@ router.get('/kanban-columns', async (req, res) => {
 
 router.post('/kanban-columns', async (req, res) => {
   try {
-    const { title, slug, color, sort_order, responsible_user_id } = req.body;
+    const { title, slug, color, sort_order, responsible_user_id, responsible_user_ids } = req.body;
     const { rows } = await db.query(
-      'INSERT INTO kanban_columns (title, slug, color, sort_order, responsible_user_id) VALUES ($1, $2, $3, $4, $5) RETURNING *',
-      [title, slug, color || '#6366F1', sort_order || 0, responsible_user_id || null]
+      `INSERT INTO kanban_columns (title, slug, color, sort_order, responsible_user_id, responsible_user_ids) 
+       VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
+      [title, slug, color || '#6366F1', sort_order || 0, responsible_user_id || null, responsible_user_ids || []]
     );
     res.json(rows[0]);
   } catch (err) {
@@ -126,15 +127,16 @@ router.post('/kanban-columns', async (req, res) => {
 router.patch('/kanban-columns/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { title, color, sort_order, responsible_user_id } = req.body;
+    const { title, color, sort_order, responsible_user_id, responsible_user_ids } = req.body;
     const { rows } = await db.query(
       `UPDATE kanban_columns 
        SET title = COALESCE($1, title), 
            color = COALESCE($2, color), 
            sort_order = COALESCE($3, sort_order),
-           responsible_user_id = $4
-       WHERE id = $5 RETURNING *`,
-      [title, color, sort_order, responsible_user_id, id]
+           responsible_user_id = $4,
+           responsible_user_ids = COALESCE($5, responsible_user_ids)
+       WHERE id = $6 RETURNING *`,
+      [title, color, sort_order, responsible_user_id, responsible_user_ids, id]
     );
     res.json(rows[0]);
   } catch (err) {

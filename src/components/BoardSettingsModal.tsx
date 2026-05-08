@@ -89,12 +89,24 @@ export const BoardSettingsModal: React.FC<BoardSettingsModalProps> = ({ onClose,
     }
   };
 
-  const toggleResponsibleForExisting = (col: Column, userId: string) => {
+  const toggleResponsibleForExisting = async (col: Column, userId: string) => {
     const currentIds = col.responsible_user_ids || [];
     const newIds = currentIds.includes(userId)
       ? currentIds.filter(id => id !== userId)
       : [...currentIds, userId];
-    handleUpdateColumnResponsibles(col.id, newIds);
+
+    // ATUALIZAÇÃO OTIMISTA (INSTANTÂNEA NA TELA)
+    setColumns(prev => prev.map(c => c.id === col.id ? { ...c, responsible_user_ids: newIds } : c));
+
+    try {
+      await api.patch(`/api/kanban-columns/${col.id}`, {
+        responsible_user_ids: newIds
+      });
+      onSuccess();
+    } catch (err) {
+      console.error('Erro ao salvar responsáveis:', err);
+      fetchColumns(); // Reverte em caso de erro
+    }
   };
 
   const handleDeleteColumn = async (id: string, title: string) => {
