@@ -304,7 +304,28 @@ router.patch('/tasks/:id', async (req, res) => {
     }
 
     await db.query('COMMIT');
-    res.json(rows[0]);
+    
+    // Buscar a tarefa completa com os novos responsáveis e dados do projeto
+    const { rows: fullTask } = await db.query(`
+      SELECT 
+        t.*,
+        p.name as project_name,
+        json_agg(
+          json_build_object(
+            'user_id', pr.user_id,
+            'full_name', pr.full_name,
+            'color', pr.color
+          )
+        ) FILTER (WHERE pr.user_id IS NOT NULL) as assignees
+      FROM tasks t
+      LEFT JOIN projects p ON t.project_id = p.id
+      LEFT JOIN task_assignments ta ON t.id = ta.task_id
+      LEFT JOIN profiles pr ON ta.user_id = pr.user_id
+      WHERE t.id = $1
+      GROUP BY t.id, p.name
+    `, [id]);
+
+    res.json(fullTask[0]);
   } catch (err) {
     await db.query('ROLLBACK');
     console.error('Erro ao atualizar tarefa:', err);
