@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { 
   X, Loader2, Type, AlignLeft, Flag, Calendar, 
-  Users as UsersIcon, Send, MessageSquare, Tag, RefreshCcw 
+  Users as UsersIcon, Send, MessageSquare, Layout, RefreshCcw 
 } from 'lucide-react';
 import { api } from '../lib/api';
 import { useUsers } from '../hooks/useUsers';
@@ -21,7 +21,7 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, onClose,
   const [loading, setLoading] = useState(false);
   const [commentsLoading, setCommentsLoading] = useState(true);
   const [comments, setComments] = useState<any[]>([]);
-  const [workflowStages, setWorkflowStages] = useState<any[]>([]);
+  const [kanbanColumns, setKanbanColumns] = useState<any[]>([]);
   const [newComment, setNewComment] = useState('');
   const [formData, setFormData] = useState({
     title: task.title || '',
@@ -38,7 +38,7 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, onClose,
 
   useEffect(() => {
     fetchComments();
-    fetchWorkflowStages();
+    fetchKanbanColumns();
   }, [task.id]);
 
   useEffect(() => {
@@ -49,12 +49,12 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, onClose,
     commentsEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const fetchWorkflowStages = async () => {
+  const fetchKanbanColumns = async () => {
     try {
-      const res = await api.get('/api/workflow-configs');
-      setWorkflowStages(res.data);
+      const res = await api.get('/api/kanban-columns');
+      setKanbanColumns(res.data);
     } catch (err) {
-      console.error('Erro ao buscar estágios:', err);
+      console.error('Erro ao buscar colunas do Kanban:', err);
     }
   };
 
@@ -109,12 +109,19 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, onClose,
     }
   };
 
+  const currentColumn = kanbanColumns.find(c => c.slug === formData.status);
+
   return createPortal(
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content detail-modal animate-fade-in" onClick={e => e.stopPropagation()}>
         <div className="modal-header">
           <div className="header-with-status">
-            <span className={`status-tag ${formData.status}`}>{formData.status}</span>
+            <span 
+              className="status-tag-premium" 
+              style={{ backgroundColor: currentColumn?.color || 'var(--bg-tertiary)' }}
+            >
+              {currentColumn?.title || formData.status}
+            </span>
             <h2>Detalhes da Tarefa</h2>
           </div>
           <button className="close-btn" onClick={onClose}><X size={20} /></button>
@@ -124,26 +131,27 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, onClose,
           {/* Lado Esquerdo: Edição */}
           <form onSubmit={handleSubmit} className="task-edit-side">
             <div className="form-group">
-              <label><Type size={16} /> Título</label>
+              <label><Type size={16} /> Título da Tarefa</label>
               <input 
                 type="text" 
                 required 
                 value={formData.title}
                 onChange={e => setFormData({ ...formData, title: e.target.value })}
+                className="premium-input"
               />
             </div>
 
             <div className="form-row">
               <div className="form-group">
-                <label><Tag size={16} /> Estágio do Workflow</label>
+                <label><Layout size={16} /> Estágio (Coluna)</label>
                 <select 
-                  value={formData.workflow_tag}
-                  onChange={e => setFormData({ ...formData, workflow_tag: e.target.value })}
+                  className="premium-select"
+                  value={formData.status}
+                  onChange={e => setFormData({ ...formData, status: e.target.value })}
                 >
-                  <option value="">Nenhum</option>
-                  {workflowStages.map((stage: any) => (
-                    <option key={stage.tag_name} value={stage.tag_name}>
-                      {stage.label}
+                  {kanbanColumns.map((col: any) => (
+                    <option key={col.id} value={col.slug}>
+                      {col.title}
                     </option>
                   ))}
                 </select>
@@ -151,6 +159,7 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, onClose,
               <div className="form-group">
                 <label><Flag size={16} /> Prioridade</label>
                 <select 
+                  className="premium-select"
                   value={formData.priority}
                   onChange={e => setFormData({ ...formData, priority: e.target.value as any })}
                 >
@@ -162,9 +171,10 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, onClose,
             </div>
 
             <div className="form-group">
-              <label><AlignLeft size={16} /> Descrição</label>
+              <label><AlignLeft size={16} /> Descrição Detalhada</label>
               <textarea 
                 rows={4}
+                className="premium-textarea"
                 value={formData.description}
                 onChange={e => setFormData({ ...formData, description: e.target.value })}
                 placeholder="Descreva o que precisa ser feito..."
@@ -173,9 +183,10 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, onClose,
 
             <div className="form-row">
               <div className="form-group">
-                <label><Calendar size={16} /> Prazo</label>
+                <label><Calendar size={16} /> Prazo Final</label>
                 <input 
                   type="date" 
+                  className="premium-input"
                   value={formData.due_date}
                   onChange={e => setFormData({ ...formData, due_date: e.target.value })}
                 />
@@ -183,6 +194,7 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, onClose,
               <div className="form-group">
                 <label><RefreshCcw size={16} /> Recorrência</label>
                 <select 
+                  className="premium-select"
                   value={formData.recurrence}
                   onChange={e => setFormData({ ...formData, recurrence: e.target.value })}
                 >
@@ -196,25 +208,26 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, onClose,
             </div>
 
             <div className="form-group">
-              <label><UsersIcon size={16} /> Responsáveis Adicionais</label>
+              <label><UsersIcon size={16} /> Responsáveis pela Execução</label>
               <div className="assignees-selector mini">
                 {users.map(u => (
                   <div 
                     key={u.user_id} 
                     className={`assignee-item ${formData.assignee_ids.includes(u.user_id) ? 'selected' : ''}`}
                     onClick={() => toggleAssignee(u.user_id)}
+                    title={u.full_name}
                   >
                     <div className="assignee-avatar" style={{ backgroundColor: u.color || 'var(--accent-primary)' }}>
                       {u.full_name?.charAt(0)}
                     </div>
-                    <span className="assignee-name">{u.full_name}</span>
+                    <span className="assignee-name">{u.full_name.split(' ')[0]}</span>
                   </div>
                 ))}
               </div>
             </div>
 
-            <div className="modal-actions sticky">
-              <button type="submit" className="submit-btn" disabled={loading}>
+            <div className="modal-actions-footer">
+              <button type="submit" className="save-task-btn" disabled={loading}>
                 {loading ? <Loader2 className="animate-spin" size={18} /> : 'Salvar Alterações'}
               </button>
             </div>
@@ -231,7 +244,7 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, onClose,
               {commentsLoading ? (
                 <div className="loading-comments"><Loader2 className="animate-spin" /></div>
               ) : comments.length === 0 ? (
-                <div className="empty-comments">Nenhum comentário ainda. Comece a conversa!</div>
+                <div className="empty-comments">Nenhum comentário ainda.</div>
               ) : (
                 comments.map(c => (
                   <div key={c.id} className={`comment-item ${c.user_id === currentUser?.id ? 'own' : ''}`}>

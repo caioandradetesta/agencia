@@ -667,3 +667,53 @@
   font-style: italic;
   font-size: 14px;
 }
+
+.status-tag-premium {
+  padding: 4px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  color: white;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.premium-input, .premium-select, .premium-textarea {
+  width: 100%;
+  padding: 10px 12px;
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  color: var(--text-primary);
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.premium-input:focus, .premium-select:focus, .premium-textarea:focus {
+  border-color: var(--accent-primary);
+  outline: none;
+  background-color: var(--bg-primary);
+}
+
+.save-task-btn {
+  width: 100%;
+  padding: 12px;
+  background-color: var(--accent-primary);
+  color: white;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 14px;
+  margin-top: 16px;
+  transition: all 0.2s;
+}
+
+.save-task-btn:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+
+.modal-actions-footer {
+  margin-top: auto;
+  padding-top: 20px;
+}
