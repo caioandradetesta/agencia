@@ -1,7 +1,3 @@
--- Habilitar extensões necessárias para UUIDs
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-CREATE EXTENSION IF NOT EXISTS "pgcrypto";
-
 -- 1. Usuários para Login (Local)
 CREATE TABLE IF NOT EXISTS users (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
