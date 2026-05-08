@@ -28,7 +28,7 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, onClose,
     status: task.status || 'todo',
     priority: task.priority || 'medium',
     due_date: task.due_date ? new Date(task.due_date).toISOString().split('T')[0] : '',
-    assignee_ids: task.assignees?.map((a: any) => a.user_id || a.id) || [],
+    assignee_ids: task.assignees?.map((a: any) => a.user_id) || [],
     workflow_tag: task.workflow_tag || '',
     recurrence: task.recurrence || ''
   });

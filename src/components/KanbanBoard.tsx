@@ -103,15 +103,11 @@ export const KanbanBoard: React.FC = () => {
                         </div>
                       </div>
                       <div className="task-assignees">
-                        {task.assignees && task.assignees.length > 0 ? (
-                          task.assignees.map((assignee: any) => (
-                            <div key={assignee.id} className="mini-avatar" title={assignee.full_name}>
-                              {assignee.full_name?.charAt(0)}
-                            </div>
-                          ))
-                        ) : (
-                          <div className="mini-avatar empty">?</div>
-                        )}
+                        {task.assignees?.map((a: any) => (
+                          <div key={a.user_id} className="assignee-avatar" title={a.full_name}>
+                            {a.full_name?.charAt(0)}
+                          </div>
+                        ))}
                       </div>
                     </div>
                   </div>

@@ -53,7 +53,7 @@ router.get('/tasks', async (req, res) => {
              COALESCE(
                json_agg(
                  json_build_object(
-                   'id', p.id,
+                   'user_id', p.user_id,
                    'full_name', p.full_name,
                    'avatar_url', p.avatar_url
                  )
@@ -159,6 +159,7 @@ router.patch('/tasks/:id', async (req, res) => {
     res.json(rows[0]);
   } catch (err) {
     await db.query('ROLLBACK');
+    console.error('Erro ao atualizar tarefa:', err);
     res.status(500).json({ error: err.message });
   }
 });
