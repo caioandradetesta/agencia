@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { X, Loader2, Building2, User, Mail, Phone } from 'lucide-react';
+import { X, Loader2, Building2, User, Mail, Phone, Upload, Image as ImageIcon } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { uploadFile } from '../lib/storage';
 import './Modal.css';
 
 interface AddClientModalProps {
@@ -10,6 +11,8 @@ interface AddClientModalProps {
 
 export const AddClientModal: React.FC<AddClientModalProps> = ({ onClose, onSuccess }) => {
   const [loading, setLoading] = useState(false);
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     name: '',
     company: '',
@@ -17,14 +20,29 @@ export const AddClientModal: React.FC<AddClientModalProps> = ({ onClose, onSucce
     phone: ''
   });
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setLogoFile(file);
+      setLogoPreview(URL.createObjectURL(file));
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
+      let logo_url = '';
+      if (logoFile) {
+        const fileExt = logoFile.name.split('.').pop();
+        const fileName = `${Math.random()}.${fileExt}`;
+        logo_url = await uploadFile('client-logos', fileName, logoFile);
+      }
+
       const { error } = await supabase
         .from('clients')
-        .insert([formData]);
+        .insert([{ ...formData, logo_url }]);
 
       if (error) throw error;
       onSuccess();
@@ -45,6 +63,17 @@ export const AddClientModal: React.FC<AddClientModalProps> = ({ onClose, onSucce
         </div>
 
         <form onSubmit={handleSubmit} className="modal-form">
+          <div className="logo-upload-section">
+            <div className="logo-preview">
+              {logoPreview ? <img src={logoPreview} alt="Preview" /> : <ImageIcon size={32} />}
+            </div>
+            <label className="upload-label">
+              <Upload size={16} />
+              Carregar Logo
+              <input type="file" hidden accept="image/*" onChange={handleFileChange} />
+            </label>
+          </div>
+
           <div className="form-group">
             <label><Building2 size={16} /> Nome da Empresa</label>
             <input 
