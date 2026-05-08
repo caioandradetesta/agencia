@@ -121,3 +121,6 @@ CREATE TABLE IF NOT EXISTS notifications (
 
 -- Adicionar coluna de tag de workflow nas tarefas
 ALTER TABLE tasks ADD COLUMN IF NOT EXISTS workflow_tag TEXT;
+
+-- Adicionar coluna de recorrência nas tarefas
+ALTER TABLE tasks ADD COLUMN IF NOT EXISTS recurrence TEXT; -- daily, weekly, monthly, quarterly

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Loader2, Type, AlignLeft, Flag, Calendar, Users as UsersIcon, Check } from 'lucide-react';
+import { X, Loader2, Type, AlignLeft, Flag, Calendar, Users as UsersIcon, Check, RefreshCcw } from 'lucide-react';
 import { useTasks } from '../hooks/useTasks';
 import { useUsers } from '../hooks/useUsers';
 import './Modal.css';
@@ -20,7 +20,8 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ onClose, onSuccess }
     status: 'todo' as const,
     priority: 'medium' as const,
     due_date: '',
-    assignee_ids: [] as string[]
+    assignee_ids: [] as string[],
+    recurrence: ''
   });
 
   const toggleAssignee = (userId: string) => {
@@ -115,6 +116,19 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ onClose, onSuccess }
                 value={formData.due_date}
                 onChange={e => setFormData({ ...formData, due_date: e.target.value })}
               />
+            </div>
+            <div className="form-group">
+              <label><RefreshCcw size={16} /> Recorrência</label>
+              <select 
+                value={formData.recurrence}
+                onChange={e => setFormData({ ...formData, recurrence: e.target.value })}
+              >
+                <option value="">Nenhuma</option>
+                <option value="daily">Diário</option>
+                <option value="weekly">Semanal</option>
+                <option value="monthly">Mensal</option>
+                <option value="quarterly">Trimestral</option>
+              </select>
             </div>
           </div>
 

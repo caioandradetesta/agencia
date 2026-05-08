@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { 
   X, Loader2, Type, AlignLeft, Flag, Calendar, 
-  Users as UsersIcon, Check, Send, MessageSquare, Tag 
+  Users as UsersIcon, Check, Send, MessageSquare, Tag, RefreshCcw 
 } from 'lucide-react';
 import { api } from '../lib/api';
 import { useUsers } from '../hooks/useUsers';
@@ -29,7 +29,8 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, onClose,
     priority: task.priority || 'medium',
     due_date: task.due_date ? new Date(task.due_date).toISOString().split('T')[0] : '',
     assignee_ids: task.assignees?.map((a: any) => a.user_id || a.id) || [],
-    workflow_tag: task.workflow_tag || ''
+    workflow_tag: task.workflow_tag || '',
+    recurrence: task.recurrence || ''
   });
 
   const commentsEndRef = useRef<HTMLDivElement>(null);
@@ -167,7 +168,19 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, onClose,
                   onChange={e => setFormData({ ...formData, due_date: e.target.value })}
                 />
               </div>
-              <div className="form-group" />
+              <div className="form-group">
+                <label><RefreshCcw size={16} /> Recorrência</label>
+                <select 
+                  value={formData.recurrence}
+                  onChange={e => setFormData({ ...formData, recurrence: e.target.value })}
+                >
+                  <option value="">Nenhuma</option>
+                  <option value="daily">Diário</option>
+                  <option value="weekly">Semanal</option>
+                  <option value="monthly">Mensal</option>
+                  <option value="quarterly">Trimestral</option>
+                </select>
+              </div>
             </div>
 
             <div className="form-group">

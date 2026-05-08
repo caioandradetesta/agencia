@@ -128,6 +128,30 @@ router.patch('/tasks/:id', async (req, res) => {
     }
     
     await db.query('COMMIT');
+
+    // --- AUTOMAÇÃO DE RECORRÊNCIA ---
+    if (status === 'done' && rows[0].recurrence) {
+      const task = rows[0];
+      const nextDueDate = new Date(task.due_date || new Date());
+      
+      if (task.recurrence === 'daily') nextDueDate.setDate(nextDueDate.getDate() + 1);
+      else if (task.recurrence === 'weekly') nextDueDate.setDate(nextDueDate.getDate() + 7);
+      else if (task.recurrence === 'monthly') nextDueDate.setMonth(nextDueDate.getMonth() + 1);
+      else if (task.recurrence === 'quarterly') nextDueDate.setMonth(nextDueDate.getMonth() + 3);
+
+      // Criar a nova instância da tarefa
+      const { rows: newTask } = await db.query(
+        'INSERT INTO tasks (project_id, title, description, status, priority, due_date, recurrence, workflow_tag) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',
+        [task.project_id, task.title, task.description, 'todo', task.priority, nextDueDate, task.recurrence, task.workflow_tag]
+      );
+
+      // Copiar os responsáveis
+      const { rows: assignees } = await db.query('SELECT user_id FROM task_assignments WHERE task_id = $1', [id]);
+      for (const a of assignees) {
+        await db.query('INSERT INTO task_assignments (task_id, user_id) VALUES ($1, $2)', [newTask[0].id, a.user_id]);
+      }
+    }
+    
     res.json(rows[0]);
   } catch (err) {
     await db.query('ROLLBACK');
