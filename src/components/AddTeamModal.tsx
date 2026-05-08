@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Users, AlignLeft, Loader2 } from 'lucide-react';
 import { api } from '../lib/api';
 import './Modal.css';
@@ -30,7 +31,7 @@ export const AddTeamModal: React.FC<AddTeamModalProps> = ({ onClose, onSuccess }
     }
   };
 
-  return (
+  return createPortal(
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content animate-fade-in" onClick={e => e.stopPropagation()}>
         <div className="modal-header">
@@ -68,6 +69,7 @@ export const AddTeamModal: React.FC<AddTeamModalProps> = ({ onClose, onSuccess }
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };

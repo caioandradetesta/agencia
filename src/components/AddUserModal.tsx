@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Loader2, User, Mail, Shield, Users as UsersIcon } from 'lucide-react';
 import { api } from '../lib/api';
 import { useTeams } from '../hooks/useTeams';
@@ -38,7 +39,7 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({ onClose, onSuccess }
     }
   };
 
-  return (
+  return createPortal(
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content animate-fade-in" onClick={e => e.stopPropagation()}>
         <div className="modal-header">
@@ -104,6 +105,7 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({ onClose, onSuccess }
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
