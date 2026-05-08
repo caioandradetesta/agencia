@@ -65,7 +65,8 @@ async function migrate() {
     // Forçar adição da coluna caso a tabela já exista (V7)
     await runQuery(`
       ALTER TABLE kanban_columns ADD COLUMN IF NOT EXISTS responsible_user_ids UUID[] DEFAULT '{}';
-    `, 'Adicionando responsible_user_ids a kanban_columns');
+      UPDATE kanban_columns SET responsible_user_ids = '{}' WHERE responsible_user_ids IS NULL;
+    `, 'Sincronizando responsible_user_ids em kanban_columns');
 
     console.log('✅ Migração V6 finalizada!');
   } catch (err) {
