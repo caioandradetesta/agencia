@@ -70,6 +70,63 @@ router.get('/projects', async (req, res) => {
   }
 });
 
+router.post('/projects', async (req, res) => {
+  try {
+    const { name, client_id, status, description } = req.body;
+    const { rows } = await db.query(
+      'INSERT INTO projects (name, client_id, status, description) VALUES ($1, $2, $3, $4) RETURNING *',
+      [name, client_id, status || 'active', description || '']
+    );
+    res.json(rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.delete('/projects/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    await db.query('DELETE FROM projects WHERE id = $1', [id]);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// --- COLUNAS KANBAN ---
+
+router.get('/kanban-columns', async (req, res) => {
+  try {
+    const { rows } = await db.query('SELECT * FROM kanban_columns ORDER BY sort_order ASC');
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/kanban-columns', async (req, res) => {
+  try {
+    const { title, slug, color, sort_order } = req.body;
+    const { rows } = await db.query(
+      'INSERT INTO kanban_columns (title, slug, color, sort_order) VALUES ($1, $2, $3, $4) RETURNING *',
+      [title, slug, color || '#6366F1', sort_order || 0]
+    );
+    res.json(rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.delete('/kanban-columns/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    await db.query('DELETE FROM kanban_columns WHERE id = $1', [id]);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // --- TAREFAS (KANBAN) ---
 
 router.get('/tasks', async (req, res) => {

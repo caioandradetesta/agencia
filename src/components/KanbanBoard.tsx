@@ -1,21 +1,31 @@
-import React, { useState } from 'react';
-import { MoreVertical, Plus, Clock, MessageSquare, Loader2 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { MoreVertical, Plus, Clock, MessageSquare, Loader2, Settings } from 'lucide-react';
 import { useTasks } from '../hooks/useTasks';
 import { AddTaskModal } from './AddTaskModal';
 import { TaskDetailModal } from './TaskDetailModal';
+import { BoardSettingsModal } from './BoardSettingsModal';
+import { api } from '../lib/api';
 import './KanbanBoard.css';
-
-const COLUMN_MAP = [
-  { id: 'todo', title: 'A Fazer' },
-  { id: 'doing', title: 'Em Andamento' },
-  { id: 'review', title: 'Revisão' },
-  { id: 'done', title: 'Concluído' }
-];
 
 export const KanbanBoard: React.FC = () => {
   const { tasks, loading, updateTaskStatus, refresh } = useTasks();
+  const [columns, setColumns] = useState<any[]>([]);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [selectedTask, setSelectedTask] = useState<any>(null);
+
+  useEffect(() => {
+    fetchColumns();
+  }, []);
+
+  const fetchColumns = async () => {
+    try {
+      const res = await api.get('/api/kanban-columns');
+      setColumns(res.data);
+    } catch (err) {
+      console.error('Erro ao buscar colunas:', err);
+    }
+  };
 
   const getPriorityLabel = (priority?: string) => {
     const map: Record<string, string> = {
@@ -30,7 +40,7 @@ export const KanbanBoard: React.FC = () => {
     e.dataTransfer.setData('taskId', taskId);
   };
 
-  const handleDrop = (e: React.DragEvent, status: any) => {
+  const handleDrop = (e: React.DragEvent, status: string) => {
     const taskId = e.dataTransfer.getData('taskId');
     updateTaskStatus(taskId, status);
   };
@@ -42,11 +52,20 @@ export const KanbanBoard: React.FC = () => {
   return (
     <div className="kanban-container">
       <div className="kanban-header">
-        <h2>Quadro de Tarefas</h2>
-        <button className="add-task-btn" onClick={() => setShowAddModal(true)}>
-          <Plus size={18} />
-          Nova Tarefa
-        </button>
+        <div className="header-info-kanban">
+          <h2>Quadro de Tarefas</h2>
+          <p>Gerencie o fluxo de trabalho da sua equipe.</p>
+        </div>
+        <div className="header-actions">
+          <button className="settings-btn-kanban" onClick={() => setShowSettingsModal(true)}>
+            <Settings size={18} />
+            Gerenciar Quadro
+          </button>
+          <button className="add-task-btn" onClick={() => setShowAddModal(true)}>
+            <Plus size={18} />
+            Nova Tarefa
+          </button>
+        </div>
       </div>
 
       {loading ? (
@@ -56,26 +75,26 @@ export const KanbanBoard: React.FC = () => {
         </div>
       ) : (
         <div className="kanban-board">
-          {COLUMN_MAP.map(column => (
+          {columns.map(column => (
             <div 
               key={column.id} 
               className="kanban-column"
-              onDrop={(e) => handleDrop(e, column.id)}
+              onDrop={(e) => handleDrop(e, column.slug)}
               onDragOver={handleDragOver}
             >
-              <div className="column-header">
+              <div className="column-header" style={{ borderTop: `4px solid ${column.color}` }}>
                 <div className="column-title">
-                  <span className={`status-dot ${column.id}`}></span>
+                  <span className="status-dot" style={{ backgroundColor: column.color }}></span>
                   <h3>{column.title}</h3>
                   <span className="task-count">
-                    {tasks.filter(t => t.status === column.id).length}
+                    {tasks.filter(t => t.status === column.slug).length}
                   </span>
                 </div>
                 <button className="more-btn"><MoreVertical size={16} /></button>
               </div>
 
               <div className="task-list">
-                {tasks.filter(t => t.status === column.id).map(task => (
+                {tasks.filter(t => t.status === column.slug).map(task => (
                   <div 
                     key={task.id} 
                     className="task-card animate-fade-in"
@@ -118,7 +137,7 @@ export const KanbanBoard: React.FC = () => {
                   </div>
                 ))}
                 
-                {tasks.filter(t => t.status === column.id).length === 0 && (
+                {tasks.filter(t => t.status === column.slug).length === 0 && (
                   <div className="empty-column-hint">Arrastar aqui</div>
                 )}
 
@@ -144,6 +163,16 @@ export const KanbanBoard: React.FC = () => {
           task={selectedTask}
           onClose={() => setSelectedTask(null)}
           onSuccess={refresh}
+        />
+      )}
+
+      {showSettingsModal && (
+        <BoardSettingsModal 
+          onClose={() => setShowSettingsModal(false)}
+          onSuccess={() => {
+            fetchColumns();
+            refresh();
+          }}
         />
       )}
     </div>

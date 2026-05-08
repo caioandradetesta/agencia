@@ -132,3 +132,22 @@ ALTER TABLE profiles ADD COLUMN IF NOT EXISTS color TEXT DEFAULT '#6366F1';
 ALTER TABLE workflow_configs ADD COLUMN IF NOT EXISTS color TEXT DEFAULT '#6366F1';
 ALTER TABLE workflow_configs ADD COLUMN IF NOT EXISTS label TEXT;
 ALTER TABLE workflow_configs ADD COLUMN IF NOT EXISTS sort_order INTEGER DEFAULT 0;
+
+-- Tabela para colunas dinâmicas do Kanban
+CREATE TABLE IF NOT EXISTS kanban_columns (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  title TEXT NOT NULL,
+  slug TEXT UNIQUE NOT NULL,
+  color TEXT DEFAULT '#6366F1',
+  sort_order INTEGER DEFAULT 0,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Inserir colunas padrão se não existirem
+INSERT INTO kanban_columns (title, slug, color, sort_order)
+VALUES 
+  ('A Fazer', 'todo', '#94a3b8', 0),
+  ('Em Produção', 'doing', '#6366F1', 1),
+  ('Revisão', 'review', '#f59e0b', 2),
+  ('Concluído', 'done', '#10b981', 3)
+ON CONFLICT (slug) DO NOTHING;

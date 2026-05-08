@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Users, Settings, Plus, Shield, Trash2, Mail, MoreHorizontal, Edit3, Search, Loader2, AlertCircle } from 'lucide-react';
+import { Users, Settings, Plus, Shield, Trash2, Mail, MoreHorizontal, Edit3, Search, Loader2, AlertCircle, RefreshCcw } from 'lucide-react';
 import { useUsers } from '../hooks/useUsers';
 import { useTeams } from '../hooks/useTeams';
 import { AddUserModal } from '../components/AddUserModal';
@@ -37,28 +37,22 @@ export const UsersPage: React.FC = () => {
     <div className="users-page animate-fade-in">
       <div className="page-header">
         <div className="header-info">
-          <h1>Gestão de Usuários</h1>
-          <p>Gerencie sua equipe e permissões de acesso.</p>
+          <h1>Gestão da Equipe</h1>
+          <p>Gerencie membros, funções e permissões de acesso.</p>
         </div>
         <div className="header-actions">
+          <button className="workflow-btn" onClick={() => setShowWorkflowModal(true)}>
+            <RefreshCcw size={18} />
+            Configurar Workflow
+          </button>
           <button className="secondary-btn" onClick={() => setShowTeamModal(true)}>
             <Users size={18} />
             Nova Equipe
-          </button>
-          <div className="header-actions" style={{ display: 'flex', gap: '12px' }}>
-          <button 
-            className="add-user-btn" 
-            style={{ backgroundColor: 'var(--bg-tertiary)', color: 'var(--text-primary)' }}
-            onClick={() => setShowWorkflowModal(true)}
-          >
-            <Settings size={18} />
-            Configurar Automação
           </button>
           <button className="add-user-btn" onClick={() => setShowUserModal(true)}>
             <Plus size={18} />
             Convidar Membro
           </button>
-        </div>
         </div>
       </div>
 

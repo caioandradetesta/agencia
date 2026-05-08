@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { Layout } from './components/Layout';
 import { KanbanBoard } from './components/KanbanBoard';
 import { ProjectWiki } from './components/ProjectWiki';
+import { ProjectsPage } from './pages/ProjectsPage';
 import { UsersPage } from './pages/UsersPage';
 import { ClientsPage } from './pages/ClientsPage';
 import { ContractsPage } from './pages/ContractsPage';
@@ -87,7 +88,8 @@ function App() {
     <Layout>
       <Routes>
         <Route path="/" element={<Dashboard />} />
-        <Route path="/projects" element={<ProjectWiki />} />
+        <Route path="/projects" element={<ProjectsPage />} />
+        <Route path="/wiki" element={<ProjectWiki />} />
         <Route path="/tasks" element={<KanbanBoard />} />
         <Route path="/agenda" element={<AgendaPage />} />
         <Route path="/clients" element={<ClientsPage />} />
