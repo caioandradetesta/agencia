@@ -8,7 +8,8 @@ import {
   Edit3,
   Search,
   Loader2,
-  AlertCircle
+  AlertCircle,
+  Users
 } from 'lucide-react';
 import { useUsers } from '../hooks/useUsers';
 import { AddUserModal } from '../components/AddUserModal';
