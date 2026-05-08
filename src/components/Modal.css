@@ -539,6 +539,7 @@
   display: flex;
   flex-direction: column;
   gap: 24px;
+  padding: 0 24px 24px 24px;
 }
 
 .add-stage-form {
@@ -612,8 +613,8 @@
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding-right: 8px;
+  gap: 12px;
+  padding: 4px 8px;
 }
 
 .stage-card-manage {
