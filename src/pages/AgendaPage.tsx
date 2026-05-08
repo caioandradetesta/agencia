@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Clock, Filter, Plus } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useTasks } from '../hooks/useTasks';
 import { TaskDetailModal } from '../components/TaskDetailModal';
 import './AgendaPage.css';
