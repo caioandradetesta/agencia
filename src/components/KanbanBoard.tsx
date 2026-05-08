@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   MoreVertical, Plus, Clock, MessageSquare, Loader2, 
-  Settings, Columns, List, Filter, Search 
+  Settings, Columns, List, Search 
 } from 'lucide-react';
 import { useTasks } from '../hooks/useTasks';
 import { AddTaskModal } from './AddTaskModal';
