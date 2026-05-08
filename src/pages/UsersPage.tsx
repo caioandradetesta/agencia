@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   UserPlus, 
   MoreHorizontal, 
@@ -11,10 +11,12 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { useUsers } from '../hooks/useUsers';
+import { AddUserModal } from '../components/AddUserModal';
 import './UsersPage.css';
 
 export const UsersPage: React.FC = () => {
   const { users, loading, error, refresh } = useUsers();
+  const [showModal, setShowModal] = useState(false);
 
   return (
     <div className="users-page animate-fade-in">
@@ -23,7 +25,7 @@ export const UsersPage: React.FC = () => {
           <h1>Gestão de Usuários</h1>
           <p>Gerencie sua equipe e permissões de acesso.</p>
         </div>
-        <button className="add-user-btn">
+        <button className="add-user-btn" onClick={() => setShowModal(true)}>
           <UserPlus size={18} />
           Convidar Membro
         </button>
@@ -36,7 +38,7 @@ export const UsersPage: React.FC = () => {
         </div>
         <div className="u-stat">
           <span className="u-label">Membros Ativos</span>
-          <span className="u-value">{users.length}</span>
+          <span className="u-value">{users.filter(u => u.role !== 'inactive').length}</span>
         </div>
         <div className="u-stat">
           <span className="u-label">Equipes</span>
@@ -125,6 +127,13 @@ export const UsersPage: React.FC = () => {
           </div>
         )}
       </div>
+
+      {showModal && (
+        <AddUserModal 
+          onClose={() => setShowModal(false)} 
+          onSuccess={refresh}
+        />
+      )}
     </div>
   );
 };

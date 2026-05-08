@@ -15,14 +15,26 @@ export const LoginPage: React.FC = () => {
     setError(null);
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      console.log('Tentando login para:', email);
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erro detalhado do Supabase:', error);
+        throw error;
+      }
+      
+      console.log('Login bem sucedido:', data);
     } catch (err: any) {
-      setError(err.message);
+      console.error('Erro capturado no catch:', err);
+      // Se for Failed to fetch, vamos tentar dar um log mais detalhado
+      if (err.message === 'Failed to fetch') {
+        setError('Erro de Conexão: O navegador não conseguiu alcançar o Supabase. Verifique se o seu computador tem acesso a https://mvtwewbnkaqmqvkvlpmh.supabase.co');
+      } else {
+        setError(err.message);
+      }
     } finally {
       setLoading(false);
     }
@@ -38,7 +50,7 @@ export const LoginPage: React.FC = () => {
 
         <form onSubmit={handleLogin} className="login-form">
           {error && (
-            <div className="login-error">
+            <div className="login-error" style={{ fontSize: '12px' }}>
               <AlertCircle size={18} />
               <span>{error}</span>
             </div>

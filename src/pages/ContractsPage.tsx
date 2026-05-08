@@ -3,117 +3,157 @@ import {
   FileText, 
   Download, 
   Eye, 
-  History, 
-  CheckCircle2, 
-  AlertCircle,
+  MoreVertical, 
   Plus,
-  Search,
+  DollarSign,
   Calendar,
-  MoreVertical
+  Filter,
+  Search,
+  Loader2,
+  AlertCircle
 } from 'lucide-react';
+import { useContracts } from '../hooks/useContracts';
+import { AddContractModal } from '../components/AddContractModal';
 import './ContractsPage.css';
 
-interface Contract {
-  id: string;
-  client: string;
-  project: string;
-  value: string;
-  status: 'Assinado' | 'Aguardando' | 'Expirado';
-  date: string;
-}
-
-const mockContracts: Contract[] = [
-  { id: 'CT-001', client: 'Tech Nova', project: 'Redesign Landing Page', value: 'R$ 4.500,00', status: 'Assinado', date: '01/05/2026' },
-  { id: 'CT-002', client: 'Studio J', project: 'Gestão de Redes Sociais', value: 'R$ 2.200,00/mês', status: 'Aguardando', date: '05/05/2026' },
-  { id: 'CT-003', client: 'LogiFlow', project: 'App Development', value: 'R$ 15.000,00', status: 'Expirado', date: '20/04/2026' },
-];
-
 export const ContractsPage: React.FC = () => {
-  const [contracts] = useState<Contract[]>(mockContracts);
+  const { contracts, loading, error, refresh } = useContracts();
+  const [showModal, setShowModal] = useState(false);
+
+  const getStatusLabel = (status: string) => {
+    const map: Record<string, string> = {
+      draft: 'Rascunho',
+      pending: 'Pendente',
+      signed: 'Assinado',
+      expired: 'Expirado'
+    };
+    return map[status] || status;
+  };
 
   return (
     <div className="contracts-page animate-fade-in">
       <div className="page-header">
         <div className="header-info">
           <h1>Contratos e Planejamento</h1>
-          <p>Gestão de documentos legais e cronogramas financeiros.</p>
+          <p>Gerencie documentos legais e marcos do projeto.</p>
         </div>
-        <div className="header-actions">
-          <button className="secondary-btn"><History size={18} /> Histórico</button>
-          <button className="add-contract-btn"><Plus size={18} /> Novo Contrato</button>
+        <button className="add-contract-btn" onClick={() => setShowModal(true)}>
+          <Plus size={18} />
+          Novo Contrato
+        </button>
+      </div>
+
+      <div className="contracts-stats">
+        <div className="c-stat">
+          <div className="c-icon blue"><FileText size={20} /></div>
+          <div className="c-info">
+            <span className="c-label">Total de Contratos</span>
+            <span className="c-value">{contracts.length}</span>
+          </div>
+        </div>
+        <div className="c-stat">
+          <div className="c-icon green"><DollarSign size={20} /></div>
+          <div className="c-info">
+            <span className="c-label">Valor Total</span>
+            <span className="c-value">R$ {contracts.reduce((acc, c) => acc + (c.value || 0), 0).toLocaleString('pt-BR')}</span>
+          </div>
+        </div>
+        <div className="c-stat">
+          <div className="c-icon orange"><Calendar size={20} /></div>
+          <div className="c-info">
+            <span className="c-label">Próximos Vencimentos</span>
+            <span className="c-value">--</span>
+          </div>
         </div>
       </div>
 
-      <div className="contracts-overview">
-        <div className="overview-card">
-          <div className="o-icon blue"><FileText size={24} /></div>
-          <div className="o-info">
-            <span className="o-label">Total em Contratos</span>
-            <span className="o-value">R$ 21.700,00</span>
-          </div>
-        </div>
-        <div className="overview-card">
-          <div className="o-icon green"><CheckCircle2 size={24} /></div>
-          <div className="o-info">
-            <span className="o-label">Assinados</span>
-            <span className="o-value">12</span>
-          </div>
-        </div>
-        <div className="overview-card">
-          <div className="o-icon orange"><AlertCircle size={24} /></div>
-          <div className="o-info">
-            <span className="o-label">Pendentes</span>
-            <span className="o-value">3</span>
-          </div>
-        </div>
-      </div>
-
-      <div className="contracts-section">
-        <div className="section-header">
-          <h2>Contratos Recentes</h2>
-          <div className="section-search">
+      <div className="contracts-container">
+        <div className="table-controls">
+          <div className="search-bar">
             <Search size={18} />
-            <input type="text" placeholder="Buscar por cliente ou projeto..." />
+            <input type="text" placeholder="Buscar por título ou cliente..." />
           </div>
+          <button className="filter-btn"><Filter size={18} /> Filtros</button>
         </div>
 
-        <div className="contracts-list">
-          {contracts.map(contract => (
-            <div key={contract.id} className="contract-item">
-              <div className="c-info-main">
-                <div className="c-icon"><FileText size={20} /></div>
-                <div className="c-text">
-                  <h3>{contract.project}</h3>
-                  <p>{contract.client} • {contract.id}</p>
-                </div>
-              </div>
-              
-              <div className="c-meta">
-                <div className="meta-block">
-                  <span className="m-label">Valor</span>
-                  <span className="m-value">{contract.value}</span>
-                </div>
-                <div className="meta-block">
-                  <span className="m-label">Data</span>
-                  <div className="m-date">
-                    <Calendar size={14} />
-                    <span>{contract.date}</span>
-                  </div>
-                </div>
-                <div className={`status-pill ${contract.status.toLowerCase()}`}>
-                  {contract.status}
-                </div>
-              </div>
-
-              <div className="c-actions">
-                <button className="action-icon" title="Visualizar"><Eye size={18} /></button>
-                <button className="action-icon" title="Download"><Download size={18} /></button>
-                <button className="action-icon more"><MoreVertical size={18} /></button>
-              </div>
-            </div>
-          ))}
-        </div>
+        {loading ? (
+          <div className="loading-state">
+            <Loader2 className="animate-spin" size={32} />
+            <p>Carregando contratos...</p>
+          </div>
+        ) : error ? (
+          <div className="error-state">
+            <AlertCircle size={32} />
+            <p>Erro ao carregar contratos: {error}</p>
+          </div>
+        ) : (
+          <div className="contracts-table-wrapper">
+            <table className="contracts-table">
+              <thead>
+                <tr>
+                  <th>Título do Contrato</th>
+                  <th>Cliente</th>
+                  <th>Valor</th>
+                  <th>Status</th>
+                  <th>Data</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                {contracts.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} style={{ textAlign: 'center', padding: '40px' }}>
+                      Nenhum contrato encontrado.
+                    </td>
+                  </tr>
+                ) : (
+                  contracts.map(contract => (
+                    <tr key={contract.id}>
+                      <td>
+                        <div className="doc-cell">
+                          <FileText size={20} className="doc-icon" />
+                          <div className="doc-info">
+                            <span className="doc-title">{contract.title}</span>
+                            <span className="doc-project">{contract.projects?.name || 'Sem projeto'}</span>
+                          </div>
+                        </div>
+                      </td>
+                      <td>{contract.clients?.company || '--'}</td>
+                      <td>
+                        <span className="value-cell">R$ {contract.value?.toLocaleString('pt-BR')}</span>
+                      </td>
+                      <td>
+                        <span className={`status-badge ${contract.status}`}>
+                          {getStatusLabel(contract.status)}
+                        </span>
+                      </td>
+                      <td>{new Date(contract.created_at).toLocaleDateString('pt-BR')}</td>
+                      <td>
+                        <div className="action-group">
+                          <button className="icon-btn" title="Ver Detalhes"><Eye size={16} /></button>
+                          {contract.file_url && (
+                            <a href={contract.file_url} target="_blank" rel="noreferrer" className="icon-btn" title="Download">
+                              <Download size={16} />
+                            </a>
+                          )}
+                          <button className="icon-btn"><MoreVertical size={16} /></button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
+
+      {showModal && (
+        <AddContractModal 
+          onClose={() => setShowModal(false)} 
+          onSuccess={refresh}
+        />
+      )}
     </div>
   );
 };
