@@ -236,6 +236,8 @@ router.patch('/tasks/:id', async (req, res) => {
 
       if (colConfig.length > 0 && colConfig[0].responsible_user_id) {
         const autoUserId = colConfig[0].responsible_user_id;
+        console.log(`🤖 [Automação] Atribuindo usuário ${autoUserId} à tarefa ${id} (Estágio: ${status})`);
+        
         await db.query(`
           INSERT INTO task_assignments (task_id, user_id) 
           VALUES ($1, $2) 
