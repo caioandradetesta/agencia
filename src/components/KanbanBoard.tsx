@@ -62,9 +62,6 @@ export const KanbanBoard: React.FC = () => {
     updateTaskStatus(taskId, newStatus);
   };
 
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-  };
 
   return (
     <div className="kanban-container">
