@@ -20,7 +20,7 @@ import './UsersPage.css';
 
 export const UsersPage: React.FC = () => {
   const { users, loading: usersLoading, error: usersError, refresh: refreshUsers } = useUsers();
-  const { teams, loading: teamsLoading, refresh: refreshTeams } = useTeams();
+  const { teams, refresh: refreshTeams } = useTeams();
   const [showUserModal, setShowUserModal] = useState(false);
   const [showTeamModal, setShowTeamModal] = useState(false);
   const [activeTab, setActiveTab] = useState<'members' | 'teams'>('members');
