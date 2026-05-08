@@ -11,6 +11,9 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
+// Importar Rotas
+const authRoutes = require('./routes/auth');
+
 // Função para inicializar o banco de dados
 const initDb = async () => {
   try {
@@ -24,6 +27,7 @@ const initDb = async () => {
 };
 
 // API Routes
+app.use('/api/auth', authRoutes);
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'Backend Agencia está online!' });
 });
