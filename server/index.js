@@ -42,7 +42,7 @@ app.use(express.static(path.join(__dirname, '../dist')));
 // Servir a pasta de uploads publicamente
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-app.get('*', (req, res) => {
+app.get('(.*)', (req, res) => {
   if (!req.url.startsWith('/api')) {
     res.sendFile(path.join(__dirname, '../dist/index.html'));
   }
