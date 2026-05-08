@@ -14,6 +14,7 @@ export interface Task {
   recurrence?: string;
   profiles?: any;
   assignees?: any[];
+  project_name?: string;
   created_at: string;
 }
 

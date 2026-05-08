@@ -1,6 +1,7 @@
+import React, { useState, useEffect } from 'react';
 import { 
   MoreVertical, Plus, Clock, MessageSquare, Loader2, 
-  Settings, LayoutKanban, List, Filter, Search 
+  Settings, Columns, List, Filter, Search 
 } from 'lucide-react';
 import { useTasks } from '../hooks/useTasks';
 import { AddTaskModal } from './AddTaskModal';
@@ -66,7 +67,6 @@ export const KanbanBoard: React.FC = () => {
     updateTaskStatus(taskId, newStatus);
   };
 
-
   const filteredTasks = tasks.filter(t => 
     t.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     t.project_name?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -97,7 +97,7 @@ export const KanbanBoard: React.FC = () => {
               onClick={() => setViewMode('kanban')}
               title="Visualização em Quadro"
             >
-              <LayoutKanban size={18} />
+              <Columns size={18} />
             </button>
             <button 
               className={`toggle-btn ${viewMode === 'table' ? 'active' : ''}`}
@@ -127,7 +127,7 @@ export const KanbanBoard: React.FC = () => {
         </div>
       ) : viewMode === 'kanban' ? (
         <div className="kanban-board">
-          {columns.map(column => (
+          {columns.map((column: any) => (
             <div 
               key={column.id} 
               className="kanban-column"
@@ -174,7 +174,7 @@ export const KanbanBoard: React.FC = () => {
                       </span>
                     </div>
                     <h4>{task.title}</h4>
-                    <p>{task.description}</p>
+                    <p className="task-desc-short">{task.description}</p>
                     
                     <div className="task-footer">
                       <div className="task-meta">
@@ -231,18 +231,18 @@ export const KanbanBoard: React.FC = () => {
             </thead>
             <tbody>
               {filteredTasks.map(task => {
-                const col = columns.find(c => c.slug === task.status);
+                const col = columns.find((c: any) => c.slug === task.status);
                 return (
                   <tr key={task.id} onClick={() => setSelectedTask(task)} className="table-row-hover">
                     <td>
                       <div className="task-title-cell">
-                        <span className="task-dot-status" style={{ backgroundColor: col?.color }}></span>
+                        <span className="task-dot-status" style={{ backgroundColor: col?.color || 'var(--bg-tertiary)' }}></span>
                         <strong>{task.title}</strong>
                       </div>
                     </td>
                     <td><span className="project-badge-mini">{task.project_name || 'Sem Projeto'}</span></td>
                     <td>
-                      <span className="status-badge-table" style={{ backgroundColor: col?.color + '20', color: col?.color }}>
+                      <span className="status-badge-table" style={{ backgroundColor: (col?.color || '#ccc') + '20', color: col?.color || '#999' }}>
                         {col?.title || task.status}
                       </span>
                     </td>
@@ -263,10 +263,10 @@ export const KanbanBoard: React.FC = () => {
                           <div 
                             key={a.user_id} 
                             className="avatar-mini" 
-                            style={{ backgroundColor: a.color }}
+                            style={{ backgroundColor: a.color || 'var(--accent-primary)' }}
                             title={a.full_name}
                           >
-                            {a.full_name.charAt(0)}
+                            {a.full_name?.charAt(0)}
                           </div>
                         ))}
                       </div>
