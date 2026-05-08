@@ -10,10 +10,10 @@ export interface Task {
   priority?: 'low' | 'medium' | 'high';
   due_date?: string;
   assigned_to?: string;
-  profiles?: {
-    full_name: string;
-    avatar_url?: string;
-  };
+  workflow_tag?: string;
+  recurrence?: string;
+  profiles?: any;
+  assignees?: any[];
 }
 
 export const useTasks = () => {

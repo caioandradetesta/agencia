@@ -1,18 +1,25 @@
 import React, { useState, useEffect } from 'react';
-import { Bell, X, Check, Info } from 'lucide-react';
+import { Bell, X, Info } from 'lucide-react';
 import { api } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 import './NotificationCenter.css';
 
+interface Notification {
+  id: string;
+  title: string;
+  content: string;
+  read: boolean;
+  created_at: string;
+}
+
 export const NotificationCenter: React.FC = () => {
   const { user } = useAuth();
-  const [notifications, setNotifications] = useState<any[]>([]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
 
   useEffect(() => {
     if (user) {
       fetchNotifications();
-      // Polling básico para simular real-time
       const interval = setInterval(fetchNotifications, 10000);
       return () => clearInterval(interval);
     }

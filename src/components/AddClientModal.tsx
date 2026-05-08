@@ -1,3 +1,4 @@
+import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { X, User, Mail, Building2, Phone, Image, Loader2 } from 'lucide-react';
 import { api } from '../lib/api';
