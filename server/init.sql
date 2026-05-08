@@ -86,3 +86,10 @@ CREATE TABLE IF NOT EXISTS contracts (
   value DECIMAL(12,2),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
+
+-- 9. Atribuições de Tarefas (Multi-assign)
+CREATE TABLE IF NOT EXISTS task_assignments (
+  task_id UUID REFERENCES tasks(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  PRIMARY KEY (task_id, user_id)
+);

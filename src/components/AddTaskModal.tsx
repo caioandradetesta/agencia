@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Loader2, Type, AlignLeft, Flag, Calendar } from 'lucide-react';
+import { X, Loader2, Type, AlignLeft, Flag, Calendar, Users as UsersIcon, Check } from 'lucide-react';
 import { useTasks } from '../hooks/useTasks';
+import { useUsers } from '../hooks/useUsers';
 import './Modal.css';
 
 interface AddTaskModalProps {
@@ -11,14 +12,25 @@ interface AddTaskModalProps {
 
 export const AddTaskModal: React.FC<AddTaskModalProps> = ({ onClose, onSuccess }) => {
   const { addTask } = useTasks();
+  const { users } = useUsers();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     status: 'todo' as const,
     priority: 'medium' as const,
-    due_date: ''
+    due_date: '',
+    assignee_ids: [] as string[]
   });
+
+  const toggleAssignee = (userId: string) => {
+    setFormData(prev => ({
+      ...prev,
+      assignee_ids: prev.assignee_ids.includes(userId)
+        ? prev.assignee_ids.filter(id => id !== userId)
+        : [...prev.assignee_ids, userId]
+    }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,7 +41,7 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ onClose, onSuccess }
       onSuccess();
       onClose();
     } catch (err: any) {
-      // Error handled in hook
+      // Erro tratado no hook
     } finally {
       setLoading(false);
     }
@@ -63,6 +75,25 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ onClose, onSuccess }
               value={formData.description}
               onChange={e => setFormData({ ...formData, description: e.target.value })}
             />
+          </div>
+
+          <div className="form-group">
+            <label><UsersIcon size={16} /> Atribuir Membros</label>
+            <div className="assignees-selector">
+              {users.map(user => (
+                <div 
+                  key={user.user_id} 
+                  className={`assignee-item ${formData.assignee_ids.includes(user.user_id) ? 'selected' : ''}`}
+                  onClick={() => toggleAssignee(user.user_id)}
+                >
+                  <div className="assignee-avatar">
+                    {user.full_name?.charAt(0)}
+                  </div>
+                  <span className="assignee-name">{user.full_name}</span>
+                  {formData.assignee_ids.includes(user.user_id) && <Check size={14} className="check-icon" />}
+                </div>
+              ))}
+            </div>
           </div>
 
           <div className="form-row">

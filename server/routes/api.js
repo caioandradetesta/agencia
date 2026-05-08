@@ -48,7 +48,24 @@ router.get('/projects', async (req, res) => {
 
 router.get('/tasks', async (req, res) => {
   try {
-    const { rows } = await db.query('SELECT * FROM tasks ORDER BY created_at ASC');
+    const { rows } = await db.query(`
+      SELECT t.*, 
+             COALESCE(
+               json_agg(
+                 json_build_object(
+                   'id', p.id,
+                   'full_name', p.full_name,
+                   'avatar_url', p.avatar_url
+                 )
+               ) FILTER (WHERE p.id IS NOT NULL), 
+               '[]'
+             ) as assignees
+      FROM tasks t
+      LEFT JOIN task_assignments ta ON t.id = ta.task_id
+      LEFT JOIN profiles p ON ta.user_id = p.user_id
+      GROUP BY t.id
+      ORDER BY t.created_at ASC
+    `);
     res.json(rows);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -73,13 +90,30 @@ router.patch('/tasks/:id', async (req, res) => {
 
 router.post('/tasks', async (req, res) => {
   try {
-    const { project_id, title, status, description } = req.body;
+    const { project_id, title, status, description, priority, due_date, assignee_ids } = req.body;
+    
+    await db.query('BEGIN');
+    
     const { rows } = await db.query(
-      'INSERT INTO tasks (project_id, title, status, description) VALUES ($1, $2, $3, $4) RETURNING *',
-      [project_id, title, status || 'todo', description]
+      'INSERT INTO tasks (project_id, title, status, description, priority, due_date) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
+      [project_id, title, status || 'todo', description, priority || 'medium', due_date || null]
     );
-    res.json(rows[0]);
+    
+    const task = rows[0];
+
+    if (assignee_ids && Array.isArray(assignee_ids)) {
+      for (const userId of assignee_ids) {
+        await db.query(
+          'INSERT INTO task_assignments (task_id, user_id) VALUES ($1, $2)',
+          [task.id, userId]
+        );
+      }
+    }
+    
+    await db.query('COMMIT');
+    res.json(task);
   } catch (err) {
+    await db.query('ROLLBACK');
     res.status(500).json({ error: err.message });
   }
 });
