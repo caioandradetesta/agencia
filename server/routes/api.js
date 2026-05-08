@@ -191,19 +191,19 @@ router.patch('/tasks/:id', async (req, res) => {
     // Atualização dos campos básicos
     const { rows } = await db.query(
       `UPDATE tasks 
-       SET status = $1, 
-           title = $2, 
-           description = $3, 
-           priority = $4, 
-           due_date = $5,
-           workflow_tag = $6,
-           recurrence = $7
+       SET status = COALESCE($1, status), 
+           title = COALESCE($2, title), 
+           description = COALESCE($3, description), 
+           priority = COALESCE($4, priority), 
+           due_date = COALESCE($5, due_date),
+           workflow_tag = COALESCE($6, workflow_tag),
+           recurrence = COALESCE($7, recurrence)
        WHERE id = $8 RETURNING *`,
       [
-        status || 'todo', 
-        title, 
-        description || '', 
-        priority || 'medium', 
+        status || null, 
+        title || null, 
+        description || null, 
+        priority || null, 
         (due_date === '' || !due_date) ? null : due_date, 
         workflow_tag || null, 
         recurrence || null, 
