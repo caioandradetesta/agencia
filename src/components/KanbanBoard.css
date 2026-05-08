@@ -476,3 +476,11 @@
   text-align: center;
   color: var(--text-muted);
 }
+
+.assignee-avatar, .col-owner-avatar, .avatar-mini {
+  color: white !important;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
