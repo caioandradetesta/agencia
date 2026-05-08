@@ -203,7 +203,7 @@ export const KanbanBoard: React.FC = () => {
                   </div>
                 ))}
                 
-                {tasks.filter(t => t.status === column.slug).length === 0 && (
+                {filteredTasks.filter(t => t.status === column.slug).length === 0 && (
                   <div className="empty-column-hint">Arrastar aqui</div>
                 )}
 
@@ -214,6 +214,77 @@ export const KanbanBoard: React.FC = () => {
               </div>
             </div>
           ))}
+        </div>
+      ) : (
+        <div className="tasks-table-container animate-fade-in">
+          <table className="premium-table">
+            <thead>
+              <tr>
+                <th>Tarefa</th>
+                <th>Projeto</th>
+                <th>Estágio</th>
+                <th>Prioridade</th>
+                <th>Prazo</th>
+                <th>Responsáveis</th>
+                <th style={{ width: '40px' }}></th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredTasks.map(task => {
+                const col = columns.find(c => c.slug === task.status);
+                return (
+                  <tr key={task.id} onClick={() => setSelectedTask(task)} className="table-row-hover">
+                    <td>
+                      <div className="task-title-cell">
+                        <span className="task-dot-status" style={{ backgroundColor: col?.color }}></span>
+                        <strong>{task.title}</strong>
+                      </div>
+                    </td>
+                    <td><span className="project-badge-mini">{task.project_name || 'Sem Projeto'}</span></td>
+                    <td>
+                      <span className="status-badge-table" style={{ backgroundColor: col?.color + '20', color: col?.color }}>
+                        {col?.title || task.status}
+                      </span>
+                    </td>
+                    <td>
+                      <span className={`priority-pill ${task.priority}`}>
+                        {getPriorityLabel(task.priority)}
+                      </span>
+                    </td>
+                    <td>
+                      <div className="date-cell">
+                        <Clock size={14} />
+                        {task.due_date ? new Date(task.due_date).toLocaleDateString('pt-BR') : 'S/ Data'}
+                      </div>
+                    </td>
+                    <td>
+                      <div className="assignees-mini-list">
+                        {task.assignees?.map((a: any) => (
+                          <div 
+                            key={a.user_id} 
+                            className="avatar-mini" 
+                            style={{ backgroundColor: a.color }}
+                            title={a.full_name}
+                          >
+                            {a.full_name.charAt(0)}
+                          </div>
+                        ))}
+                      </div>
+                    </td>
+                    <td>
+                      <button className="table-action-btn"><MoreVertical size={16} /></button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+          {filteredTasks.length === 0 && (
+            <div className="empty-table-state">
+              <Search size={48} />
+              <p>Nenhuma tarefa encontrada com esses filtros.</p>
+            </div>
+          )}
         </div>
       )}
 
