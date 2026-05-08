@@ -141,21 +141,24 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, onClose,
               />
             </div>
 
-            <div className="form-row">
-              <div className="form-group">
-                <label><Layout size={16} /> Estágio (Coluna)</label>
-                <select 
-                  className="premium-select"
-                  value={formData.status}
-                  onChange={e => setFormData({ ...formData, status: e.target.value })}
-                >
-                  {kanbanColumns.map((col: any) => (
-                    <option key={col.id} value={col.slug}>
-                      {col.title}
-                    </option>
-                  ))}
-                </select>
+            <div className="form-group">
+              <label><Layout size={16} /> Estágio Atual</label>
+              <div className="stage-pills-selector">
+                {kanbanColumns.map((col: any) => (
+                  <div 
+                    key={col.id} 
+                    className={`stage-pill-item ${formData.status === col.slug ? 'selected' : ''}`}
+                    onClick={() => setFormData({ ...formData, status: col.slug })}
+                    style={{ '--stage-color': col.color } as any}
+                  >
+                    <span className="s-dot" style={{ backgroundColor: col.color }}></span>
+                    {col.title}
+                  </div>
+                ))}
               </div>
+            </div>
+
+            <div className="form-row">
               <div className="form-group">
                 <label><Flag size={16} /> Prioridade</label>
                 <select 
@@ -167,6 +170,15 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, onClose,
                   <option value="medium">Média</option>
                   <option value="high">Alta</option>
                 </select>
+              </div>
+              <div className="form-group">
+                <label><Calendar size={16} /> Prazo Final</label>
+                <input 
+                  type="date" 
+                  className="premium-input"
+                  value={formData.due_date}
+                  onChange={e => setFormData({ ...formData, due_date: e.target.value })}
+                />
               </div>
             </div>
 
@@ -181,30 +193,19 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, onClose,
               />
             </div>
 
-            <div className="form-row">
-              <div className="form-group">
-                <label><Calendar size={16} /> Prazo Final</label>
-                <input 
-                  type="date" 
-                  className="premium-input"
-                  value={formData.due_date}
-                  onChange={e => setFormData({ ...formData, due_date: e.target.value })}
-                />
-              </div>
-              <div className="form-group">
-                <label><RefreshCcw size={16} /> Recorrência</label>
-                <select 
-                  className="premium-select"
-                  value={formData.recurrence}
-                  onChange={e => setFormData({ ...formData, recurrence: e.target.value })}
-                >
-                  <option value="">Nenhuma</option>
-                  <option value="daily">Diário</option>
-                  <option value="weekly">Semanal</option>
-                  <option value="monthly">Mensal</option>
-                  <option value="quarterly">Trimestral</option>
-                </select>
-              </div>
+            <div className="form-group">
+              <label><RefreshCcw size={16} /> Recorrência de Tarefa</label>
+              <select 
+                className="premium-select"
+                value={formData.recurrence}
+                onChange={e => setFormData({ ...formData, recurrence: e.target.value })}
+              >
+                <option value="">Nenhuma</option>
+                <option value="daily">Diário</option>
+                <option value="weekly">Semanal</option>
+                <option value="monthly">Mensal</option>
+                <option value="quarterly">Trimestral</option>
+              </select>
             </div>
 
             <div className="form-group">
