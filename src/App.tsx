@@ -6,6 +6,7 @@ import { UsersPage } from './pages/UsersPage';
 import { ClientsPage } from './pages/ClientsPage';
 import { ContractsPage } from './pages/ContractsPage';
 import { LoginPage } from './pages/LoginPage';
+import { AgendaPage } from './pages/AgendaPage';
 import { useAuth } from './context/AuthContext';
 import { 
   BarChart3, 
@@ -88,6 +89,7 @@ function App() {
         <Route path="/" element={<Dashboard />} />
         <Route path="/projects" element={<ProjectWiki />} />
         <Route path="/tasks" element={<KanbanBoard />} />
+        <Route path="/agenda" element={<AgendaPage />} />
         <Route path="/clients" element={<ClientsPage />} />
         <Route path="/users" element={<UsersPage />} />
         <Route path="/contracts" element={<ContractsPage />} />

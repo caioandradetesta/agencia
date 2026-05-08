@@ -42,9 +42,9 @@
   --text-secondary: #94A3B8;
   --text-muted: #64748B;
 
-  --accent-primary: #60A5FA;
-  --accent-hover: #93C5FD;
-  --accent-soft: rgba(96, 165, 250, 0.1);
+  --accent-primary: #6366F1;
+  --accent-primary-rgb: 99, 102, 241;
+  --accent-soft: rgba(99, 102, 241, 0.1);
 
   --border-color: #334155;
   --card-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.5);

@@ -48,7 +48,7 @@ const navItems: NavItem[] = [
     icon: <CheckSquare size={20} />,
     path: '/tasks'
   },
-  { id: 'agenda', label: 'Agenda', icon: <Calendar size={20} />, path: '/' },
+  { id: 'agenda', label: 'Agenda', icon: <Calendar size={20} />, path: '/agenda' },
   { id: 'clients', label: 'Clientes', icon: <Users size={20} />, path: '/clients' },
   { id: 'users', label: 'Usuários', icon: <UserSquare2 size={20} />, path: '/users' },
   { id: 'contracts', label: 'Contratos', icon: <FileText size={20} />, path: '/contracts' },
