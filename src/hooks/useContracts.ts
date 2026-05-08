@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
+import { api } from '../lib/api';
 
 export interface Contract {
   id: string;
@@ -10,12 +10,8 @@ export interface Contract {
   status: 'draft' | 'pending' | 'signed' | 'expired';
   value: number;
   created_at: string;
-  projects?: {
-    name: string;
-  };
-  clients?: {
-    company: string;
-  };
+  project_name?: string;
+  client_name?: string;
 }
 
 export const useContracts = () => {
@@ -26,17 +22,8 @@ export const useContracts = () => {
   const fetchContracts = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('contracts')
-        .select(`
-          *,
-          projects ( name ),
-          clients ( company )
-        `)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setContracts(data || []);
+      const response = await api.get('/api/contracts');
+      setContracts(response.data);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -44,9 +31,19 @@ export const useContracts = () => {
     }
   };
 
+  const addContract = async (contract: Partial<Contract>) => {
+    try {
+      const response = await api.post('/api/contracts', contract);
+      setContracts(prev => [response.data, ...prev]);
+      return response.data;
+    } catch (err: any) {
+      throw new Error(err.response?.data?.error || 'Erro ao salvar contrato');
+    }
+  };
+
   useEffect(() => {
     fetchContracts();
   }, []);
 
-  return { contracts, loading, error, refresh: fetchContracts };
+  return { contracts, loading, error, addContract, refresh: fetchContracts };
 };

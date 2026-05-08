@@ -1,21 +1,25 @@
-import { supabase } from './supabase';
+import { api } from './api';
 
-export const uploadFile = async (bucket: string, path: string, file: File) => {
+/**
+ * Faz upload de um arquivo para o backend local no Dokploy
+ * @param bucket Nome da pasta (ex: logos, contracts)
+ * @param fileName Nome do arquivo (não usado no backend local pois ele gera um único)
+ * @param file O arquivo em si
+ */
+export const uploadFile = async (bucket: string, fileName: string, file: File): Promise<string> => {
+  const formData = new FormData();
+  formData.append('file', file);
+
   try {
-    const { data, error } = await supabase.storage
-      .from(bucket)
-      .upload(path, file, {
-        upsert: true,
-      });
+    const response = await api.post(`/api/upload?type=${bucket}`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
 
-    if (error) throw error;
-
-    const { data: { publicUrl } } = supabase.storage
-      .from(bucket)
-      .getPublicUrl(data.path);
-
-    return publicUrl;
-  } catch (error: any) {
-    throw new Error('Falha no upload: ' + error.message);
+    return response.data.url;
+  } catch (error) {
+    console.error('Erro no upload:', error);
+    throw new Error('Falha ao enviar arquivo para o servidor.');
   }
 };

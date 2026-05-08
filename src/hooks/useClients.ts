@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
+import { api } from '../lib/api';
 
 export interface Client {
   id: string;
@@ -19,13 +19,8 @@ export const useClients = () => {
   const fetchClients = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('clients')
-        .select('*')
-        .order('name');
-
-      if (error) throw error;
-      setClients(data || []);
+      const response = await api.get('/api/clients');
+      setClients(response.data);
     } catch (err: any) {
       setError(err.message);
     } finally {

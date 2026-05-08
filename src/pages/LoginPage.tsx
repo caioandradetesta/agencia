@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
-import { supabase } from '../lib/supabase';
+import { api } from '../lib/api';
+import { useAuth } from '../context/AuthContext';
 import { LogIn, Mail, Lock, Loader2, AlertCircle } from 'lucide-react';
 import './LoginPage.css';
 
 export const LoginPage: React.FC = () => {
+  const { login } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [email, setEmail] = useState('');
@@ -15,26 +17,19 @@ export const LoginPage: React.FC = () => {
     setError(null);
 
     try {
-      console.log('Tentando login para:', email);
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const response = await api.post('/api/auth/login', {
         email,
         password,
       });
 
-      if (error) {
-        console.error('Erro detalhado do Supabase:', error);
-        throw error;
-      }
+      const { token, user } = response.data;
+      login(token, user);
       
-      console.log('Login bem sucedido:', data);
+      // O redirecionamento será automático pelo AuthGuard no App.tsx
     } catch (err: any) {
-      console.error('Erro capturado no catch:', err);
-      // Se for Failed to fetch, vamos tentar dar um log mais detalhado
-      if (err.message === 'Failed to fetch') {
-        setError('Erro de Conexão: O navegador não conseguiu alcançar o Supabase. Verifique se o seu computador tem acesso a https://mvtwewbnkaqmqvkvlpmh.supabase.co');
-      } else {
-        setError(err.message);
-      }
+      console.error('Erro no login:', err);
+      const message = err.response?.data?.error || 'Erro ao conectar ao servidor.';
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -50,7 +45,7 @@ export const LoginPage: React.FC = () => {
 
         <form onSubmit={handleLogin} className="login-form">
           {error && (
-            <div className="login-error" style={{ fontSize: '12px' }}>
+            <div className="login-error">
               <AlertCircle size={18} />
               <span>{error}</span>
             </div>

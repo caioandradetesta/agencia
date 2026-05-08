@@ -13,6 +13,8 @@ app.use(express.json());
 
 // Importar Rotas
 const authRoutes = require('./routes/auth');
+const apiRoutes = require('./routes/api');
+const uploadRoutes = require('./routes/uploads');
 
 // Função para inicializar o banco de dados
 const initDb = async () => {
@@ -28,12 +30,17 @@ const initDb = async () => {
 
 // API Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/upload', uploadRoutes);
+app.use('/api', apiRoutes);
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'Backend Agencia está online!' });
 });
 
 // Servir os arquivos estáticos do React (Frontend)
 app.use(express.static(path.join(__dirname, '../dist')));
+
+// Servir a pasta de uploads publicamente
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.get('*', (req, res) => {
   if (!req.url.startsWith('/api')) {
