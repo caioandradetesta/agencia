@@ -1,5 +1,6 @@
--- Habilitar extensões necessárias
+-- Habilitar extensões necessárias para UUIDs
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
 -- 1. Usuários para Login (Local)
 CREATE TABLE IF NOT EXISTS users (
@@ -25,6 +26,7 @@ CREATE TABLE IF NOT EXISTS profiles (
   avatar_url TEXT,
   role TEXT DEFAULT 'user',
   team_id UUID REFERENCES teams(id),
+  color TEXT DEFAULT '#6366F1',
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
@@ -61,6 +63,8 @@ CREATE TABLE IF NOT EXISTS tasks (
   status TEXT DEFAULT 'todo',
   priority TEXT DEFAULT 'medium',
   due_date TIMESTAMP WITH TIME ZONE,
+  workflow_tag TEXT,
+  recurrence TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
@@ -106,7 +110,10 @@ CREATE TABLE IF NOT EXISTS task_comments (
 -- 11. Configurações de Workflow (Automação Tag -> Usuário)
 CREATE TABLE IF NOT EXISTS workflow_configs (
   tag_name TEXT PRIMARY KEY,
-  user_id UUID REFERENCES users(id) ON DELETE CASCADE
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  color TEXT DEFAULT '#6366F1',
+  label TEXT,
+  sort_order INTEGER DEFAULT 0
 );
 
 -- 12. Notificações do Sistema
@@ -119,45 +126,9 @@ CREATE TABLE IF NOT EXISTS notifications (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Adicionar coluna de tag de workflow nas tarefas
-ALTER TABLE tasks ADD COLUMN IF NOT EXISTS workflow_tag TEXT;
-
--- Adicionar coluna de recorrência nas tarefas
-ALTER TABLE tasks ADD COLUMN IF NOT EXISTS recurrence TEXT; -- daily, weekly, monthly, quarterly
-
--- Adicionar coluna de cor personalizada nos perfis
-ALTER TABLE profiles ADD COLUMN IF NOT EXISTS color TEXT DEFAULT '#6366F1';
-
--- Atualizar tabela de estágios para suportar cores e ordenação
-ALTER TABLE workflow_configs ADD COLUMN IF NOT EXISTS color TEXT DEFAULT '#6366F1';
-ALTER TABLE workflow_configs ADD COLUMN IF NOT EXISTS label TEXT;
-ALTER TABLE workflow_configs ADD COLUMN IF NOT EXISTS sort_order INTEGER DEFAULT 0;
-
--- Tabela para colunas dinâmicas do Kanban
+-- 13. Colunas Dinâmicas do Kanban
 CREATE TABLE IF NOT EXISTS kanban_columns (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  title TEXT NOT NULL,
-  slug TEXT UNIQUE NOT NULL,
-  color TEXT DEFAULT '#6366F1',
-  sort_order INTEGER DEFAULT 0,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-);
-
--- Inserir colunas padrão se não existirem
-INSERT INTO kanban_columns (title, slug, color, sort_order)
-VALUES 
-  ('A Fazer', 'todo', '#94a3b8', 0),
-  ('Em Produção', 'doing', '#6366F1', 1),
-  ('Revisão', 'review', '#f59e0b', 2),
-  ('Concluído', 'done', '#10b981', 3)
-ON CONFLICT (slug) DO NOTHING;
-
--- Adicionar responsável automático às colunas do Kanban
-ALTER TABLE kanban_columns ADD COLUMN IF NOT EXISTS responsible_user_id UUID REFERENCES profiles(user_id);
-
--- Garantir que a tabela e a coluna existam (Redundância de segurança)
-CREATE TABLE IF NOT EXISTS kanban_columns (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   title TEXT NOT NULL,
   slug TEXT UNIQUE NOT NULL,
   color TEXT DEFAULT '#6366F1',
@@ -165,3 +136,12 @@ CREATE TABLE IF NOT EXISTS kanban_columns (
   responsible_user_id UUID REFERENCES profiles(user_id),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Dados iniciais (Seed)
+INSERT INTO kanban_columns (title, slug, color, sort_order)
+VALUES 
+  ('A Fazer', 'todo', '#94a3b8', 0),
+  ('Em Produção', 'doing', '#6366F1', 1),
+  ('Revisão', 'review', '#f59e0b', 2),
+  ('Concluído', 'done', '#10b981', 3)
+ON CONFLICT (slug) DO NOTHING;
