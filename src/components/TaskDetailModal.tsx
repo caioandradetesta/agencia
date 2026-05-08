@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { 
   X, Loader2, Type, AlignLeft, Flag, Calendar, 
-  Users as UsersIcon, Check, Send, MessageSquare, Trash2 
+  Users as UsersIcon, Check, Send, MessageSquare, Tag 
 } from 'lucide-react';
 import { api } from '../lib/api';
 import { useUsers } from '../hooks/useUsers';
@@ -28,7 +28,8 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, onClose,
     status: task.status || 'todo',
     priority: task.priority || 'medium',
     due_date: task.due_date ? new Date(task.due_date).toISOString().split('T')[0] : '',
-    assignee_ids: task.assignees?.map((a: any) => a.user_id || a.id) || []
+    assignee_ids: task.assignees?.map((a: any) => a.user_id || a.id) || [],
+    workflow_tag: task.workflow_tag || ''
   });
 
   const commentsEndRef = useRef<HTMLDivElement>(null);
@@ -120,16 +121,20 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, onClose,
               />
             </div>
 
-            <div className="form-group">
-              <label><AlignLeft size={16} /> Descrição</label>
-              <textarea 
-                rows={4}
-                value={formData.description}
-                onChange={e => setFormData({ ...formData, description: e.target.value })}
-              />
-            </div>
-
             <div className="form-row">
+              <div className="form-group">
+                <label><Tag size={16} /> Estágio do Workflow</label>
+                <select 
+                  value={formData.workflow_tag}
+                  onChange={e => setFormData({ ...formData, workflow_tag: e.target.value })}
+                >
+                  <option value="">Nenhum</option>
+                  <option value="Revisão">Revisão</option>
+                  <option value="Alteração">Alteração</option>
+                  <option value="Aprovação">Aprovação</option>
+                  <option value="Finalização">Finalização</option>
+                </select>
+              </div>
               <div className="form-group">
                 <label><Flag size={16} /> Prioridade</label>
                 <select 
@@ -141,6 +146,19 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, onClose,
                   <option value="high">Alta</option>
                 </select>
               </div>
+            </div>
+
+            <div className="form-group">
+              <label><AlignLeft size={16} /> Descrição</label>
+              <textarea 
+                rows={4}
+                value={formData.description}
+                onChange={e => setFormData({ ...formData, description: e.target.value })}
+                placeholder="Descreva o que precisa ser feito..."
+              />
+            </div>
+
+            <div className="form-row">
               <div className="form-group">
                 <label><Calendar size={16} /> Prazo</label>
                 <input 
@@ -149,10 +167,11 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, onClose,
                   onChange={e => setFormData({ ...formData, due_date: e.target.value })}
                 />
               </div>
+              <div className="form-group" />
             </div>
 
             <div className="form-group">
-              <label><UsersIcon size={16} /> Responsáveis</label>
+              <label><UsersIcon size={16} /> Responsáveis Adicionais</label>
               <div className="assignees-selector mini">
                 {users.map(u => (
                   <div 

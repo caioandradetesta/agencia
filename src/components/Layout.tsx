@@ -1,5 +1,7 @@
 import React from 'react';
 import { Sidebar } from './Sidebar';
+import { NotificationCenter } from './NotificationCenter';
+import { useAuth } from '../context/AuthContext';
 import './Layout.css';
 
 interface LayoutProps {
@@ -7,6 +9,8 @@ interface LayoutProps {
 }
 
 export const Layout: React.FC<LayoutProps> = ({ children }) => {
+  const { user } = useAuth();
+
   return (
     <div className="layout-container">
       <Sidebar />
@@ -16,11 +20,12 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
             <span>Visão Geral</span>
           </div>
           <div className="header-actions">
+            <NotificationCenter />
             <div className="user-profile">
-              <div className="avatar">JD</div>
+              <div className="avatar">{user?.full_name?.charAt(0) || 'U'}</div>
               <div className="user-info">
-                <p className="name">John Doe</p>
-                <p className="role">Administrador</p>
+                <p className="name">{user?.full_name || 'Usuário'}</p>
+                <p className="role">{user?.role || 'Membro'}</p>
               </div>
             </div>
           </div>

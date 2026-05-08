@@ -16,6 +16,7 @@ import { useTeams } from '../hooks/useTeams';
 import { AddUserModal } from '../components/AddUserModal';
 import { AddTeamModal } from '../components/AddTeamModal';
 import { EditUserModal } from '../components/EditUserModal';
+import { WorkflowSettingsModal } from '../components/WorkflowSettingsModal';
 import { api } from '../lib/api';
 import './UsersPage.css';
 
@@ -24,6 +25,7 @@ export const UsersPage: React.FC = () => {
   const { teams, refresh: refreshTeams } = useTeams();
   const [showUserModal, setShowUserModal] = useState(false);
   const [showTeamModal, setShowTeamModal] = useState(false);
+  const [showWorkflowModal, setShowWorkflowModal] = useState(false);
   const [editingUser, setEditingUser] = useState<any>(null);
   const [activeTab, setActiveTab] = useState<'members' | 'teams'>('members');
 
@@ -54,10 +56,20 @@ export const UsersPage: React.FC = () => {
             <Users size={18} />
             Nova Equipe
           </button>
+          <div className="header-actions" style={{ display: 'flex', gap: '12px' }}>
+          <button 
+            className="add-user-btn" 
+            style={{ backgroundColor: 'var(--bg-tertiary)', color: 'var(--text-primary)' }}
+            onClick={() => setShowWorkflowModal(true)}
+          >
+            <Settings size={18} />
+            Configurar Automação
+          </button>
           <button className="add-user-btn" onClick={() => setShowUserModal(true)}>
-            <UserPlus size={18} />
+            <Plus size={18} />
             Convidar Membro
           </button>
+        </div>
         </div>
       </div>
 
@@ -250,6 +262,12 @@ export const UsersPage: React.FC = () => {
           user={editingUser}
           onClose={() => setEditingUser(null)}
           onSuccess={refreshAll}
+        />
+      )}
+
+      {showWorkflowModal && (
+        <WorkflowSettingsModal 
+          onClose={() => setShowWorkflowModal(false)}
         />
       )}
     </div>

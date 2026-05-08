@@ -95,11 +95,95 @@ router.patch('/tasks/:id', async (req, res) => {
         );
       }
     }
+
+    // --- AUTOMAÇÃO DE WORKFLOW ---
+    const { workflow_tag } = req.body;
+    if (workflow_tag) {
+      // 1. Buscar se existe configuração para esta tag
+      const { rows: config } = await db.query(
+        'SELECT user_id FROM workflow_configs WHERE tag_name = $1',
+        [workflow_tag]
+      );
+
+      if (config.length > 0) {
+        const autoUserId = config[0].user_id;
+
+        // 2. Adicionar o usuário à tarefa (se não estiver)
+        await db.query(`
+          INSERT INTO task_assignments (task_id, user_id) 
+          VALUES ($1, $2) 
+          ON CONFLICT (task_id, user_id) DO NOTHING
+        `, [id, autoUserId]);
+
+        // 3. Criar Notificação
+        await db.query(`
+          INSERT INTO notifications (user_id, title, content)
+          VALUES ($1, $2, $3)
+        `, [
+          autoUserId, 
+          `Nova Atribuição: ${workflow_tag}`, 
+          `Você foi adicionado à tarefa "${rows[0].title}" pois ela entrou no estágio de ${workflow_tag}.`
+        ]);
+      }
+    }
     
     await db.query('COMMIT');
     res.json(rows[0]);
   } catch (err) {
     await db.query('ROLLBACK');
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// --- WORKFLOW CONFIGS ---
+
+router.get('/workflow-configs', async (req, res) => {
+  try {
+    const { rows } = await db.query(`
+      SELECT wc.*, p.full_name 
+      FROM workflow_configs wc
+      JOIN profiles p ON wc.user_id = p.user_id
+    `);
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/workflow-configs', async (req, res) => {
+  try {
+    const { tag_name, user_id } = req.body;
+    const { rows } = await db.query(
+      'INSERT INTO workflow_configs (tag_name, user_id) VALUES ($1, $2) ON CONFLICT (tag_name) DO UPDATE SET user_id = EXCLUDED.user_id RETURNING *',
+      [tag_name, user_id]
+    );
+    res.json(rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// --- NOTIFICAÇÕES ---
+
+router.get('/notifications', async (req, res) => {
+  try {
+    const { user_id } = req.query;
+    const { rows } = await db.query(
+      'SELECT * FROM notifications WHERE user_id = $1 ORDER BY created_at DESC LIMIT 20',
+      [user_id]
+    );
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.patch('/notifications/:id/read', async (req, res) => {
+  try {
+    const { id } = req.params;
+    await db.query('UPDATE notifications SET read = TRUE WHERE id = $1', [id]);
+    res.json({ success: true });
+  } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });

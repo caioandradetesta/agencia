@@ -102,3 +102,22 @@ CREATE TABLE IF NOT EXISTS task_comments (
   content TEXT NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
+
+-- 11. Configurações de Workflow (Automação Tag -> Usuário)
+CREATE TABLE IF NOT EXISTS workflow_configs (
+  tag_name TEXT PRIMARY KEY,
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- 12. Notificações do Sistema
+CREATE TABLE IF NOT EXISTS notifications (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  content TEXT,
+  read BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Adicionar coluna de tag de workflow nas tarefas
+ALTER TABLE tasks ADD COLUMN IF NOT EXISTS workflow_tag TEXT;
