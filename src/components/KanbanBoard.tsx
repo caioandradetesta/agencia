@@ -15,7 +15,7 @@ export const KanbanBoard: React.FC = () => {
   const { tasks, loading, updateTaskStatus, refresh } = useTasks();
   const [showModal, setShowModal] = useState(false);
 
-  const getPriorityLabel = (priority: string) => {
+  const getPriorityLabel = (priority?: string) => {
     const map: Record<string, string> = {
       low: 'Baixa',
       medium: 'Média',
