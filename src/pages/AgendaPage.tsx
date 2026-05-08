@@ -39,27 +39,28 @@ export const AgendaPage: React.FC = () => {
 
   const getTasksForDay = (day: number) => {
     const targetDate = new Date(year, month, day);
+    targetDate.setHours(0, 0, 0, 0);
     
     return tasks.filter(task => {
-      if (!task.due_date) return false;
-      const taskDate = new Date(task.due_date);
-      taskDate.setHours(0, 0, 0, 0);
-      targetDate.setHours(0, 0, 0, 0);
+      // Usar due_date ou created_at como âncora para a recorrência
+      const baseDate = task.due_date ? new Date(task.due_date) : new Date(task.created_at);
+      baseDate.setHours(0, 0, 0, 0);
       
       // Mesma data exata
-      const isExactMatch = taskDate.getTime() === targetDate.getTime();
+      const isExactMatch = baseDate.getTime() === targetDate.getTime();
 
-      if (isExactMatch) return true;
+      // Se for a data exata e tiver prazo, mostra. Se não tiver prazo, mostra só se for recorrente.
+      if (isExactMatch && (task.due_date || task.recurrence)) return true;
 
-      // Se não for exato, checa se é uma recorrência de uma tarefa passada
-      if (task.recurrence && taskDate < targetDate) {
-        const diffTime = targetDate.getTime() - taskDate.getTime();
+      // Se for uma data futura e a tarefa for recorrente
+      if (task.recurrence && baseDate < targetDate) {
+        const diffTime = targetDate.getTime() - baseDate.getTime();
         const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
         
         if (task.recurrence === 'daily') return true;
         if (task.recurrence === 'weekly') return diffDays % 7 === 0;
         if (task.recurrence === 'monthly') {
-          return taskDate.getDate() === day;
+          return baseDate.getDate() === day;
         }
       }
 
