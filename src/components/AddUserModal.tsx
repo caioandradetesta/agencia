@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Loader2, User, Mail, Shield, Users as UsersIcon, Palette } from 'lucide-react';
+import { X, Loader2, User, Mail, Shield, Users as UsersIcon, Palette, Lock } from 'lucide-react';
 import { api } from '../lib/api';
 import { useTeams } from '../hooks/useTeams';
 import './Modal.css';
@@ -26,6 +26,7 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({ onClose, onSuccess }
   const { teams } = useTeams();
   const [formData, setFormData] = useState({
     email: '',
+    password: '',
     full_name: '',
     role: 'user',
     team_id: '',
@@ -77,6 +78,18 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({ onClose, onSuccess }
               placeholder="ana@agencia.com"
               value={formData.email}
               onChange={e => setFormData({ ...formData, email: e.target.value })}
+            />
+          </div>
+
+          <div className="form-group">
+            <label><Lock size={16} /> Senha de Acesso</label>
+            <input 
+              type="password" 
+              required 
+              placeholder="Defina uma senha"
+              value={formData.password}
+              onChange={e => setFormData({ ...formData, password: e.target.value })}
+              minLength={6}
             />
           </div>
 
