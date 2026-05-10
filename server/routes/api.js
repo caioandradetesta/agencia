@@ -490,8 +490,9 @@ router.post('/tasks', async (req, res) => {
 router.get('/users', async (req, res) => {
   try {
     const { rows } = await db.query(`
-      SELECT p.*, t.name as team_name 
+      SELECT p.*, u.email, t.name as team_name 
       FROM profiles p
+      INNER JOIN users u ON p.user_id = u.id
       LEFT JOIN teams t ON p.team_id = t.id
       ORDER BY p.full_name ASC
     `);
