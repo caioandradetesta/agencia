@@ -39,12 +39,10 @@ export const EditUserModal: React.FC<EditUserModalProps> = ({ user, onClose, onS
     setLoading(true);
 
     try {
-      const dataToUpdate = { ...formData };
-      if (!dataToUpdate.password) {
-        delete dataToUpdate.password;
-      }
+      const { password, ...otherData } = formData;
+      const payload = password ? formData : otherData;
 
-      await api.patch(`/api/profiles/${user.id}`, dataToUpdate);
+      await api.patch(`/api/profiles/${user.id}`, payload);
       onSuccess();
       onClose();
     } catch (err: any) {
