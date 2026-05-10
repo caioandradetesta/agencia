@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const bcrypt = require('bcryptjs');
 const db = require('../db');
 
 // --- CLIENTES ---
@@ -503,15 +504,39 @@ router.get('/users', async (req, res) => {
 router.patch('/profiles/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { full_name, role, team_id, color } = req.body;
+    const { full_name, role, team_id, color, email, password } = req.body;
     
-    const { rows } = await db.query(
+    await db.query('BEGIN');
+
+    // 1. Atualizar Profile
+    const { rows: profileRows } = await db.query(
       'UPDATE profiles SET full_name = $1, role = $2, team_id = $3, color = $4 WHERE id = $5 RETURNING *',
       [full_name, role, team_id || null, color || '#6366F1', id]
     );
-    
-    res.json(rows[0]);
+
+    if (profileRows.length === 0) {
+      await db.query('ROLLBACK');
+      return res.status(404).json({ error: 'Perfil não encontrado' });
+    }
+
+    const userId = profileRows[0].user_id;
+
+    // 2. Atualizar Email se enviado
+    if (email) {
+      await db.query('UPDATE users SET email = $1 WHERE id = $2', [email, userId]);
+    }
+
+    // 3. Atualizar Senha se enviada
+    if (password) {
+      const hashedPassword = await bcrypt.hash(password, 10);
+      await db.query('UPDATE users SET password = $1 WHERE id = $2', [hashedPassword, userId]);
+    }
+
+    await db.query('COMMIT');
+    res.json(profileRows[0]);
   } catch (err) {
+    await db.query('ROLLBACK');
+    console.error('Erro ao atualizar perfil:', err);
     res.status(500).json({ error: err.message });
   }
 });

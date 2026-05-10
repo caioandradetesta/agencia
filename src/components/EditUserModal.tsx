@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Loader2, User, Mail, Shield, Users as UsersIcon, Palette } from 'lucide-react';
+import { X, Loader2, User, Mail, Shield, Users as UsersIcon, Palette, Lock } from 'lucide-react';
 import { api } from '../lib/api';
 import { useTeams } from '../hooks/useTeams';
 import './Modal.css';
@@ -26,6 +26,8 @@ export const EditUserModal: React.FC<EditUserModalProps> = ({ user, onClose, onS
   const [loading, setLoading] = useState(false);
   const { teams } = useTeams();
   const [formData, setFormData] = useState({
+    email: user.email || '',
+    password: '',
     full_name: user.full_name || '',
     role: user.role || 'user',
     team_id: user.team_id || '',
@@ -37,7 +39,12 @@ export const EditUserModal: React.FC<EditUserModalProps> = ({ user, onClose, onS
     setLoading(true);
 
     try {
-      await api.patch(`/api/profiles/${user.id}`, formData);
+      const dataToUpdate = { ...formData };
+      if (!dataToUpdate.password) {
+        delete dataToUpdate.password;
+      }
+
+      await api.patch(`/api/profiles/${user.id}`, dataToUpdate);
       onSuccess();
       onClose();
     } catch (err: any) {
@@ -66,9 +73,25 @@ export const EditUserModal: React.FC<EditUserModalProps> = ({ user, onClose, onS
             />
           </div>
 
-          <div className="form-group" style={{ opacity: 0.6 }}>
-            <label><Mail size={16} /> E-mail (Não pode ser alterado)</label>
-            <input type="email" value={user.email} disabled />
+          <div className="form-group">
+            <label><Mail size={16} /> E-mail</label>
+            <input 
+              type="email" 
+              required
+              value={formData.email}
+              onChange={e => setFormData({ ...formData, email: e.target.value })}
+            />
+          </div>
+
+          <div className="form-group">
+            <label><Lock size={16} /> Nova Senha (deixe em branco para manter)</label>
+            <input 
+              type="password" 
+              placeholder="Digite a nova senha"
+              value={formData.password}
+              onChange={e => setFormData({ ...formData, password: e.target.value })}
+              minLength={6}
+            />
           </div>
 
           <div className="form-row">
