@@ -50,7 +50,7 @@ export const useToast = () => {
 
 // Internal Toast Container Component
 import { createPortal } from 'react-dom';
-import { Bell, X, CheckCircle, AlertCircle, Info as InfoIcon } from 'lucide-react';
+import { X, CheckCircle, AlertCircle, Info as InfoIcon } from 'lucide-react';
 import './Toast.css';
 
 const ToastContainer: React.FC = () => {
