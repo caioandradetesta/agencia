@@ -672,6 +672,71 @@
   background-color: rgba(239, 68, 68, 0.1);
 }
 
+.edit-stage-btn {
+  color: var(--text-muted);
+  padding: 6px;
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+
+.edit-stage-btn:hover {
+  color: var(--accent-primary);
+  background-color: var(--accent-soft);
+}
+
+.stage-actions-manage {
+  display: flex;
+  gap: 8px;
+}
+
+.reorder-btns {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.reorder-btns button {
+  color: var(--text-muted);
+  padding: 2px;
+  border-radius: 4px;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.reorder-btns button:hover:not(:disabled) {
+  color: var(--accent-primary);
+  background-color: var(--accent-soft);
+}
+
+.reorder-btns button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.form-actions-workflow {
+  display: flex;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.cancel-edit-btn {
+  flex: 1;
+  padding: 10px;
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  border-radius: 8px;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.cancel-edit-btn:hover {
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
 .empty-stages {
   text-align: center;
   padding: 30px;

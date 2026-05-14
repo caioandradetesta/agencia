@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Bell, X, Info } from 'lucide-react';
 import { api } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 import './NotificationCenter.css';
 
 interface Notification {
@@ -14,8 +15,10 @@ interface Notification {
 
 export const NotificationCenter: React.FC = () => {
   const { user } = useAuth();
+  const { addToast } = useToast();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
+  const seenNotifIds = React.useRef<Set<string>>(new Set());
 
   useEffect(() => {
     if (user) {
@@ -28,7 +31,21 @@ export const NotificationCenter: React.FC = () => {
   const fetchNotifications = async () => {
     try {
       const res = await api.get(`/api/notifications?user_id=${user?.id}`);
-      setNotifications(res.data);
+      const newNotifications: Notification[] = res.data;
+      
+      // Se não for a primeira carga, mostra toast para novas notificações não lidas
+      if (seenNotifIds.current.size > 0) {
+        newNotifications.forEach(n => {
+          if (!n.read && !seenNotifIds.current.has(n.id)) {
+            addToast(n.title, n.content, 'info');
+          }
+        });
+      }
+
+      // Atualiza o conjunto de IDs vistos
+      newNotifications.forEach(n => seenNotifIds.current.add(n.id));
+      
+      setNotifications(newNotifications);
     } catch (err) {
       console.error('Erro ao buscar notificações');
     }

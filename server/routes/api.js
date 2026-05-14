@@ -176,7 +176,14 @@ router.get('/tasks', async (req, res) => {
       LEFT JOIN task_assignments ta ON t.id = ta.task_id
       LEFT JOIN profiles p ON ta.user_id = p.user_id
       GROUP BY t.id
-      ORDER BY t.created_at ASC
+      ORDER BY 
+        CASE 
+          WHEN t.priority = 'high' THEN 1 
+          WHEN t.priority = 'medium' THEN 2 
+          ELSE 3 
+        END ASC,
+        t.due_date ASC NULLS LAST,
+        t.created_at ASC
     `);
     res.json(rows);
   } catch (err) {
@@ -221,12 +228,29 @@ router.patch('/tasks/:id', async (req, res) => {
 
     // Sincronização dos responsáveis (se enviados)
     if (assignee_ids && Array.isArray(assignee_ids)) {
+      // Buscar responsáveis atuais antes de deletar para saber quem é novo
+      const { rows: oldAssignees } = await db.query('SELECT user_id FROM task_assignments WHERE task_id = $1', [id]);
+      const oldIds = oldAssignees.map(a => a.user_id);
+      const newIds = assignee_ids.filter(id => !oldIds.includes(id));
+
       await db.query('DELETE FROM task_assignments WHERE task_id = $1', [id]);
       for (const userId of assignee_ids) {
         await db.query(
           'INSERT INTO task_assignments (task_id, user_id) VALUES ($1, $2)',
           [id, userId]
         );
+      }
+
+      // Notificar novos responsáveis
+      for (const newId of newIds) {
+        await db.query(`
+          INSERT INTO notifications (user_id, title, content)
+          VALUES ($1, $2, $3)
+        `, [
+          newId,
+          'Nova Atribuição',
+          `Você foi atribuído à tarefa "${rows[0].title}".`
+        ]);
       }
     }
 

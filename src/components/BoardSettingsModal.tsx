@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Layout, Plus, Trash2, Palette, Loader2, User as UserIcon, Check } from 'lucide-react';
+import { X, Layout, Plus, Trash2, Palette, Loader2, User as UserIcon, Check, Pencil, ArrowUp, ArrowDown } from 'lucide-react';
 import { api } from '../lib/api';
 import { useUsers } from '../hooks/useUsers';
 import './Modal.css';
@@ -27,6 +27,7 @@ export const BoardSettingsModal: React.FC<BoardSettingsModalProps> = ({ onClose,
   const { users } = useUsers();
   const [columns, setColumns] = useState<Column[]>([]);
   const [loading, setLoading] = useState(false);
+  const [editingColId, setEditingColId] = useState<string | null>(null);
   const [newCol, setNewCol] = useState({
     title: '',
     slug: '',
@@ -49,23 +50,49 @@ export const BoardSettingsModal: React.FC<BoardSettingsModalProps> = ({ onClose,
 
   const handleAddColumn = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newCol.title || !newCol.slug) return;
+    if (!newCol.title || (!editingColId && !newCol.slug)) return;
 
     setLoading(true);
     try {
-      await api.post('/api/kanban-columns', {
-        ...newCol,
-        sort_order: columns.length,
-        responsible_user_ids: newCol.responsible_user_ids
-      });
+      if (editingColId) {
+        await api.patch(`/api/kanban-columns/${editingColId}`, {
+          title: newCol.title,
+          color: newCol.color,
+          responsible_user_ids: newCol.responsible_user_ids
+        });
+        setEditingColId(null);
+      } else {
+        await api.post('/api/kanban-columns', {
+          ...newCol,
+          sort_order: columns.length,
+          responsible_user_ids: newCol.responsible_user_ids
+        });
+      }
       setNewCol({ title: '', slug: '', color: '#6366F1', responsible_user_ids: [] });
       fetchColumns();
       onSuccess();
     } catch (err) {
-      alert('Erro ao adicionar coluna');
+      alert('Erro ao salvar coluna');
     } finally {
       setLoading(false);
     }
+  };
+
+  const startEdit = (col: Column) => {
+    setEditingColId(col.id);
+    setNewCol({
+      title: col.title,
+      slug: col.slug,
+      color: col.color,
+      responsible_user_ids: col.responsible_user_ids || []
+    });
+    // Scroll to form
+    document.querySelector('.add-stage-form')?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const cancelEdit = () => {
+    setEditingColId(null);
+    setNewCol({ title: '', slug: '', color: '#6366F1', responsible_user_ids: [] });
   };
 
   const toggleResponsibleForNew = (userId: string) => {
@@ -76,8 +103,6 @@ export const BoardSettingsModal: React.FC<BoardSettingsModalProps> = ({ onClose,
         : [...prev.responsible_user_ids, userId]
     }));
   };
-
-
 
   const toggleResponsibleForExisting = async (col: Column, userId: string) => {
     const currentIds = col.responsible_user_ids || [];
@@ -96,6 +121,26 @@ export const BoardSettingsModal: React.FC<BoardSettingsModalProps> = ({ onClose,
     } catch (err) {
       console.error('Erro ao salvar responsáveis:', err);
       fetchColumns(); // Reverte em caso de erro
+    }
+  };
+
+  const handleMoveColumn = async (id: string, direction: 'up' | 'down') => {
+    const index = columns.findIndex(c => c.id === id);
+    if (direction === 'up' && index === 0) return;
+    if (direction === 'down' && index === columns.length - 1) return;
+
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    const col1 = columns[index];
+    const col2 = columns[targetIndex];
+
+    try {
+      // Swap sort_order
+      await api.patch(`/api/kanban-columns/${col1.id}`, { sort_order: targetIndex });
+      await api.patch(`/api/kanban-columns/${col2.id}`, { sort_order: index });
+      fetchColumns();
+      onSuccess();
+    } catch (err) {
+      console.error('Erro ao reordenar colunas:', err);
     }
   };
 
@@ -133,12 +178,22 @@ export const BoardSettingsModal: React.FC<BoardSettingsModalProps> = ({ onClose,
                   value={newCol.title}
                   onChange={e => {
                     const title = e.target.value;
-                    const slug = title.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '-').replace(/[^\w-]/g, '');
-                    setNewCol({ ...newCol, title, slug });
+                    if (!editingColId) {
+                      const slug = title.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '-').replace(/[^\w-]/g, '');
+                      setNewCol({ ...newCol, title, slug });
+                    } else {
+                      setNewCol({ ...newCol, title });
+                    }
                   }}
                   required
                 />
               </div>
+              {editingColId && (
+                <div className="form-group" style={{ flex: 1 }}>
+                  <label>Identificador (Fixo)</label>
+                  <input type="text" disabled value={newCol.slug} className="premium-input" style={{ opacity: 0.6 }} />
+                </div>
+              )}
             </div>
 
             <div className="form-group">
@@ -172,9 +227,22 @@ export const BoardSettingsModal: React.FC<BoardSettingsModalProps> = ({ onClose,
               </div>
             </div>
 
-            <button type="submit" className="add-btn-workflow" disabled={loading}>
-              {loading ? <Loader2 className="animate-spin" size={18} /> : <><Plus size={18} /> Adicionar Coluna</>}
-            </button>
+            <div className="form-actions-workflow">
+              {editingColId && (
+                <button type="button" className="cancel-edit-btn" onClick={cancelEdit}>
+                  Cancelar Edição
+                </button>
+              )}
+              <button type="submit" className="add-btn-workflow" disabled={loading}>
+                {loading ? (
+                  <Loader2 className="animate-spin" size={18} />
+                ) : editingColId ? (
+                  <><Check size={18} /> Salvar Alterações</>
+                ) : (
+                  <><Plus size={18} /> Adicionar Coluna</>
+                )}
+              </button>
+            </div>
           </form>
 
           <div className="stages-divider">Colunas Ativas e Automações</div>
@@ -205,9 +273,22 @@ export const BoardSettingsModal: React.FC<BoardSettingsModalProps> = ({ onClose,
                     </div>
                   </div>
                 </div>
-                <button className="delete-stage-btn" onClick={() => handleDeleteColumn(col.id, col.title)}>
-                  <Trash2 size={16} />
-                </button>
+                <div className="stage-actions-manage">
+                  <div className="reorder-btns">
+                    <button onClick={() => handleMoveColumn(col.id, 'up')} disabled={columns.indexOf(col) === 0} title="Mover para cima">
+                      <ArrowUp size={14} />
+                    </button>
+                    <button onClick={() => handleMoveColumn(col.id, 'down')} disabled={columns.indexOf(col) === columns.length - 1} title="Mover para baixo">
+                      <ArrowDown size={14} />
+                    </button>
+                  </div>
+                  <button className="edit-stage-btn" onClick={() => startEdit(col)}>
+                    <Pencil size={16} />
+                  </button>
+                  <button className="delete-stage-btn" onClick={() => handleDeleteColumn(col.id, col.title)}>
+                    <Trash2 size={16} />
+                  </button>
+                </div>
               </div>
             ))}
           </div>
