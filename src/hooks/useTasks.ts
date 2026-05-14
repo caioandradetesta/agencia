@@ -55,9 +55,19 @@ export const useTasks = () => {
     }
   };
 
+  const deleteTask = async (taskId: string) => {
+    try {
+      await api.delete(`/api/tasks/${taskId}`);
+      setTasks(prev => prev.filter(t => t.id !== taskId));
+    } catch (err) {
+      console.error('Erro ao excluir tarefa:', err);
+      throw err;
+    }
+  };
+
   useEffect(() => {
     fetchTasks();
   }, []);
 
-  return { tasks, loading, error, updateTaskStatus, addTask, refresh: fetchTasks };
+  return { tasks, loading, error, updateTaskStatus, addTask, deleteTask, refresh: fetchTasks };
 };

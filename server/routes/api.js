@@ -485,6 +485,16 @@ router.post('/tasks', async (req, res) => {
   }
 });
 
+router.delete('/tasks/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    await db.query('DELETE FROM tasks WHERE id = $1', [id]);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // --- EQUIPE / USUÁRIOS ---
 
 router.get('/users', async (req, res) => {

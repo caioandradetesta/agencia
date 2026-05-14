@@ -709,15 +709,17 @@
 }
 
 .save-task-btn {
-  width: 100%;
+  flex: 2;
   padding: 12px;
   background-color: var(--accent-primary);
   color: white;
   border-radius: 12px;
   font-weight: 600;
   font-size: 14px;
-  margin-top: 16px;
   transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .save-task-btn:hover {
@@ -725,9 +727,33 @@
   transform: translateY(-1px);
 }
 
+.delete-task-btn {
+  flex: 1;
+  padding: 12px;
+  background-color: var(--bg-tertiary);
+  color: #EF4444;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s;
+}
+
+.delete-task-btn:hover:not(:disabled) {
+  background-color: #EF4444;
+  color: white;
+  border-color: #EF4444;
+}
+
 .modal-actions-footer {
   margin-top: auto;
   padding-top: 20px;
+  display: flex;
+  gap: 12px;
 }
 
 .user-selection-grid {

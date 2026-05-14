@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { 
   X, Loader2, Type, AlignLeft, Flag, Calendar, 
-  Users as UsersIcon, Send, MessageSquare, Layout, RefreshCcw 
+  Users as UsersIcon, Send, MessageSquare, Layout, RefreshCcw, Trash2 
 } from 'lucide-react';
 import { api } from '../lib/api';
 import { useUsers } from '../hooks/useUsers';
@@ -104,6 +104,21 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, onClose,
       onClose();
     } catch (err: any) {
       alert('Erro ao atualizar tarefa');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!window.confirm('Tem certeza que deseja excluir esta tarefa? Esta ação não pode ser desfeita.')) return;
+    
+    setLoading(true);
+    try {
+      await api.delete(`/api/tasks/${task.id}`);
+      onSuccess();
+      onClose();
+    } catch (err) {
+      alert('Erro ao excluir tarefa');
     } finally {
       setLoading(false);
     }
@@ -228,6 +243,15 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, onClose,
             </div>
 
             <div className="modal-actions-footer">
+              <button 
+                type="button" 
+                className="delete-task-btn" 
+                onClick={handleDelete}
+                disabled={loading}
+              >
+                <Trash2 size={18} />
+                Excluir
+              </button>
               <button type="submit" className="save-task-btn" disabled={loading}>
                 {loading ? <Loader2 className="animate-spin" size={18} /> : 'Salvar Alterações'}
               </button>
