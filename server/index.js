@@ -46,7 +46,7 @@ app.use(express.static(distPath));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Fallback para o React (SPA) - Deve ser a ÚLTIMA rota
-app.get('*', (req, res) => {
+app.use((req, res) => {
   // Se for uma requisição de API ou arquivo com extensão, não envia o index.html
   if (req.url.startsWith('/api') || req.url.includes('.')) {
     return res.status(404).send('Not found');
