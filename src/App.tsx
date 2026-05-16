@@ -25,41 +25,9 @@ const Dashboard = () => (
         <h1>Bem-vindo ao Painel! 👋</h1>
         <p>Aqui está o resumo das atividades da agência.</p>
       </div>
-      <div className="stats-grid">
-        <div className="stat-card">
-          <div className="stat-icon blue"><BarChart3 size={20} /></div>
-          <div className="stat-info">
-            <span className="label">Projetos Ativos</span>
-            <span className="value">12</span>
-          </div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-icon green"><TrendingUp size={20} /></div>
-          <div className="stat-info">
-            <span className="label">Concluídos</span>
-            <span className="value">48</span>
-          </div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-icon purple"><UsersIcon size={20} /></div>
-          <div className="stat-info">
-            <span className="label">Equipe</span>
-            <span className="value">8</span>
-          </div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-icon orange"><Clock size={20} /></div>
-          <div className="stat-info">
-            <span className="label">Horas/Mês</span>
-            <span className="value">164h</span>
-          </div>
-        </div>
-      </div>
     </div>
     
-    <div style={{ marginTop: '40px' }}>
-      <KanbanBoard />
-    </div>
+    <KanbanBoard />
   </div>
 );
 

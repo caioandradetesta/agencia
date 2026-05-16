@@ -7,17 +7,28 @@ import { useTasks } from '../hooks/useTasks';
 import { AddTaskModal } from './AddTaskModal';
 import { TaskDetailModal } from './TaskDetailModal';
 import { BoardSettingsModal } from './BoardSettingsModal';
+import { TaskStats } from './TaskStats';
+import { useUsers } from '../hooks/useUsers';
+import { useProjects } from '../hooks/useProjects';
 import { api } from '../lib/api';
 import './KanbanBoard.css';
 
 export const KanbanBoard: React.FC = () => {
   const { tasks, loading, updateTaskStatus, refresh } = useTasks();
+  const { users } = useUsers();
+  const { projects } = useProjects();
+  
   const [columns, setColumns] = useState<any[]>([]);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [selectedTask, setSelectedTask] = useState<any>(null);
   const [viewMode, setViewMode] = useState<'kanban' | 'table'>('kanban');
   const [searchTerm, setSearchTerm] = useState('');
+  
+  // Filtros
+  const [filterPriority, setFilterPriority] = useState('');
+  const [filterResponsible, setFilterResponsible] = useState('');
+  const [filterProject, setFilterProject] = useState('');
 
   useEffect(() => {
     fetchColumns();
@@ -67,10 +78,15 @@ export const KanbanBoard: React.FC = () => {
     updateTaskStatus(taskId, newStatus);
   };
 
-  const filteredTasks = tasks.filter(t => 
-    t.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    t.project_name?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredTasks = tasks.filter(t => {
+    const matchesSearch = t.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         t.project_name?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesPriority = !filterPriority || t.priority === filterPriority;
+    const matchesProject = !filterProject || t.project_id === filterProject;
+    const matchesResponsible = !filterResponsible || t.assignees?.some((a: any) => a.user_id === filterResponsible);
+    
+    return matchesSearch && matchesPriority && matchesProject && matchesResponsible;
+  });
 
   return (
     <div className="kanban-container">
@@ -85,10 +101,45 @@ export const KanbanBoard: React.FC = () => {
             <Search size={18} />
             <input 
               type="text" 
-              placeholder="Buscar tarefas..." 
+              placeholder="Buscar por nome ou projeto..." 
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
             />
+          </div>
+
+          <div className="filter-group-tasks">
+            <select 
+              value={filterPriority} 
+              onChange={e => setFilterPriority(e.target.value)}
+              className="filter-select"
+            >
+              <option value="">Prioridade: Todas</option>
+              <option value="high">Alta</option>
+              <option value="medium">Média</option>
+              <option value="low">Baixa</option>
+            </select>
+
+            <select 
+              value={filterProject} 
+              onChange={e => setFilterProject(e.target.value)}
+              className="filter-select"
+            >
+              <option value="">Projeto: Todos</option>
+              {projects.map(p => (
+                <option key={p.id} value={p.id}>{p.name}</option>
+              ))}
+            </select>
+
+            <select 
+              value={filterResponsible} 
+              onChange={e => setFilterResponsible(e.target.value)}
+              className="filter-select"
+            >
+              <option value="">Responsável: Todos</option>
+              {users.map(u => (
+                <option key={u.user_id} value={u.user_id}>{u.full_name}</option>
+              ))}
+            </select>
           </div>
 
           <div className="view-toggle">
@@ -119,6 +170,8 @@ export const KanbanBoard: React.FC = () => {
           </div>
         </div>
       </div>
+
+      <TaskStats />
 
       {loading ? (
         <div className="loading-state">

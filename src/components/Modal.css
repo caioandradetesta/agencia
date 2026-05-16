@@ -1067,3 +1067,59 @@
 .comment-item.own .rich-image-container {
   border-color: rgba(255, 255, 255, 0.2);
 }
+
+/* Mentions Dropdown */
+.comment-input-area {
+  position: relative;
+}
+
+.mention-list-dropdown {
+  position: absolute;
+  bottom: 100%;
+  left: 16px;
+  right: 16px;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  box-shadow: 0 -10px 20px rgba(0,0,0,0.1);
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 10;
+  margin-bottom: 8px;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.mention-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.mention-item:hover {
+  background-color: var(--accent-soft);
+  color: var(--accent-primary);
+}
+
+.m-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  color: white;
+}
+
+.mention-item span {
+  font-size: 13px;
+  font-weight: 600;
+}

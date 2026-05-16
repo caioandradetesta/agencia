@@ -39,6 +39,11 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, onClose,
     recurrence: task.recurrence || ''
   });
 
+  // Estado para Menções
+  const [mentionSearch, setMentionSearch] = useState('');
+  const [showMentionList, setShowMentionList] = useState(false);
+  const [mentionStartIndex, setMentionStartIndex] = useState(-1);
+
   const commentsEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -105,6 +110,43 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, onClose,
       setNewComment(newValue);
     });
   };
+
+  const handleCommentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    const cursorPosition = e.target.selectionStart || 0;
+    setNewComment(value);
+
+    // Detectar @ para menções
+    const lastAtPos = value.lastIndexOf('@', cursorPosition - 1);
+    
+    if (lastAtPos !== -1) {
+      const textAfterAt = value.substring(lastAtPos + 1, cursorPosition);
+      // Se não houver espaço entre o @ e o cursor, estamos buscando menção
+      if (!textAfterAt.includes(' ')) {
+        setMentionSearch(textAfterAt);
+        setMentionStartIndex(lastAtPos);
+        setShowMentionList(true);
+      } else {
+        setShowMentionList(false);
+      }
+    } else {
+      setShowMentionList(false);
+    }
+  };
+
+  const selectMention = (user: any) => {
+    const beforeAt = newComment.substring(0, mentionStartIndex);
+    const afterMention = newComment.substring(mentionStartIndex + mentionSearch.length + 1);
+    const updatedComment = `${beforeAt}@${user.full_name} ${afterMention}`;
+    
+    setNewComment(updatedComment);
+    setShowMentionList(false);
+    setMentionSearch('');
+  };
+
+  const filteredMentionUsers = users.filter(u => 
+    u.full_name?.toLowerCase().includes(mentionSearch.toLowerCase())
+  );
 
   const toggleAssignee = (userId: string) => {
     setFormData(prev => ({
@@ -328,11 +370,27 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, onClose,
             </div>
 
             <form onSubmit={handlePostComment} className="comment-input-area">
+              {showMentionList && filteredMentionUsers.length > 0 && (
+                <div className="mention-list-dropdown">
+                  {filteredMentionUsers.map(u => (
+                    <div 
+                      key={u.user_id} 
+                      className="mention-item"
+                      onClick={() => selectMention(u)}
+                    >
+                      <div className="m-avatar" style={{ backgroundColor: u.color || 'var(--accent-primary)' }}>
+                        {u.full_name?.charAt(0)}
+                      </div>
+                      <span>{u.full_name}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
               <input 
                 type="text" 
-                placeholder="Escreva um comentário..."
+                placeholder="Escreva um comentário (use @ para marcar)..."
                 value={newComment}
-                onChange={e => setNewComment(e.target.value)}
+                onChange={handleCommentChange}
                 onPaste={handleCommentPaste}
               />
               <button type="submit" className="send-comment-btn" disabled={!newComment.trim()}>

@@ -499,6 +499,30 @@ router.post('/tasks/:id/comments', async (req, res) => {
       JOIN profiles p ON tc.user_id = p.user_id
       WHERE tc.id = $1
     `, [rows[0].id]);
+
+    // Notificar usuários mencionados com @
+    const mentions = content.match(/@([^@\s][^@\n]*?)(?=\s|$)/g);
+    if (mentions) {
+      const mentionedNames = [...new Set(mentions.map(m => m.substring(1).trim()))];
+      
+      for (const name of mentionedNames) {
+        const { rows: mentionUser } = await db.query(
+          'SELECT user_id FROM profiles WHERE full_name ILIKE $1',
+          [name]
+        );
+        
+        if (mentionUser.length > 0 && mentionUser[0].user_id !== user_id) {
+          await db.query(
+            'INSERT INTO notifications (user_id, title, content) VALUES ($1, $2, $3)',
+            [
+              mentionUser[0].user_id, 
+              'Nova menção em tarefa', 
+              `${fullComment[0].full_name} mencionou você: "${content.substring(0, 50)}${content.length > 50 ? '...' : ''}"`
+            ]
+          );
+        }
+      }
+    }
     
     res.json(fullComment[0]);
   } catch (err) {

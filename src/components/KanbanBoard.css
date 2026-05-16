@@ -156,12 +156,19 @@
 .task-card h4 {
   font-size: 14px;
   color: var(--text-primary);
+  word-break: break-word;
 }
 
 .task-card p {
   font-size: 12px;
   color: var(--text-secondary);
   line-height: 1.5;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .task-footer {
@@ -496,4 +503,45 @@
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.filter-group-tasks {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.filter-select {
+  padding: 8px 12px;
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 500;
+  outline: none;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.filter-select:hover {
+  border-color: var(--accent-primary);
+}
+
+.filter-select:focus {
+  border-color: var(--accent-primary);
+  background-color: var(--bg-primary);
+}
+
+@media (max-width: 1200px) {
+  .header-toolbar {
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  
+  .filter-group-tasks {
+    order: 3;
+    width: 100%;
+    justify-content: flex-start;
+  }
 }
