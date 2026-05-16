@@ -172,6 +172,9 @@ export const KanbanBoard: React.FC = () => {
                       <span className={`priority-tag ${task.priority}`}>
                         {getPriorityLabel(task.priority)}
                       </span>
+                      {task.project_name && (
+                        <span className="project-tag-card">{task.project_name}</span>
+                      )}
                     </div>
                     <h4>{task.title}</h4>
                     <p className="task-desc-short">{task.description}</p>

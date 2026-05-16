@@ -61,10 +61,13 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({ onClose, onSuc
               required
               value={formData.client_id}
               onChange={e => setFormData({ ...formData, client_id: e.target.value })}
+              className="premium-select"
             >
               <option value="">Selecionar Cliente...</option>
-              {clients.map(client => (
-                <option key={client.id} value={client.id}>{client.company}</option>
+              {clients && clients.map(client => (
+                <option key={client.id} value={client.id}>
+                  {client.company || client.name}
+                </option>
               ))}
             </select>
           </div>

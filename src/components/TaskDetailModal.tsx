@@ -2,10 +2,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { 
   X, Loader2, Type, AlignLeft, Flag, Calendar, 
-  Users as UsersIcon, Send, MessageSquare, Layout, RefreshCcw, Trash2 
+  Users as UsersIcon, Send, MessageSquare, Layout, RefreshCcw, Trash2, Briefcase 
 } from 'lucide-react';
 import { api } from '../lib/api';
 import { useUsers } from '../hooks/useUsers';
+import { useProjects } from '../hooks/useProjects';
 import { useAuth } from '../context/AuthContext';
 import './Modal.css';
 
@@ -18,6 +19,7 @@ interface TaskDetailModalProps {
 export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, onClose, onSuccess }) => {
   const { user: currentUser } = useAuth();
   const { users } = useUsers();
+  const { projects } = useProjects();
   const [loading, setLoading] = useState(false);
   const [commentsLoading, setCommentsLoading] = useState(true);
   const [comments, setComments] = useState<any[]>([]);
@@ -26,6 +28,7 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, onClose,
   const [formData, setFormData] = useState({
     title: task.title || '',
     description: task.description || '',
+    project_id: task.project_id || '',
     status: task.status || 'todo',
     priority: task.priority || 'medium',
     due_date: task.due_date ? new Date(task.due_date).toISOString().split('T')[0] : '',
@@ -154,6 +157,20 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, onClose,
                 onChange={e => setFormData({ ...formData, title: e.target.value })}
                 className="premium-input"
               />
+            </div>
+
+            <div className="form-group">
+              <label><Briefcase size={16} /> Projeto Relacionado</label>
+              <select 
+                className="premium-select"
+                value={formData.project_id}
+                onChange={e => setFormData({ ...formData, project_id: e.target.value })}
+              >
+                <option value="">Nenhum Projeto</option>
+                {projects.map(project => (
+                  <option key={project.id} value={project.id}>{project.name}</option>
+                ))}
+              </select>
             </div>
 
             <div className="form-group">

@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Loader2, Type, AlignLeft, Flag, Calendar, Users as UsersIcon, Check, RefreshCcw } from 'lucide-react';
+import { X, Loader2, Type, AlignLeft, Flag, Calendar, Users as UsersIcon, Check, RefreshCcw, Briefcase } from 'lucide-react';
 import { useTasks } from '../hooks/useTasks';
 import { useUsers } from '../hooks/useUsers';
+import { useProjects } from '../hooks/useProjects';
 import './Modal.css';
 
 interface AddTaskModalProps {
@@ -13,10 +14,12 @@ interface AddTaskModalProps {
 export const AddTaskModal: React.FC<AddTaskModalProps> = ({ onClose, onSuccess }) => {
   const { addTask } = useTasks();
   const { users } = useUsers();
+  const { projects } = useProjects();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
+    project_id: '',
     status: 'todo' as const,
     priority: 'medium' as const,
     due_date: '',
@@ -66,6 +69,20 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ onClose, onSuccess }
               value={formData.title}
               onChange={e => setFormData({ ...formData, title: e.target.value })}
             />
+          </div>
+
+          <div className="form-group">
+            <label><Briefcase size={16} /> Projeto Relacionado</label>
+            <select 
+              value={formData.project_id}
+              onChange={e => setFormData({ ...formData, project_id: e.target.value })}
+              className="premium-select"
+            >
+              <option value="">Nenhum Projeto</option>
+              {projects.map(project => (
+                <option key={project.id} value={project.id}>{project.name}</option>
+              ))}
+            </select>
           </div>
 
           <div className="form-group">

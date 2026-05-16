@@ -161,6 +161,7 @@ router.get('/tasks', async (req, res) => {
   try {
     const { rows } = await db.query(`
       SELECT t.*, 
+             pr.name as project_name,
              COALESCE(
                json_agg(
                  json_build_object(
@@ -173,9 +174,10 @@ router.get('/tasks', async (req, res) => {
                '[]'
              ) as assignees
       FROM tasks t
+      LEFT JOIN projects pr ON t.project_id = pr.id
       LEFT JOIN task_assignments ta ON t.id = ta.task_id
       LEFT JOIN profiles p ON ta.user_id = p.user_id
-      GROUP BY t.id
+      GROUP BY t.id, pr.name
       ORDER BY 
         CASE 
           WHEN t.priority = 'high' THEN 1 

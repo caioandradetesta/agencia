@@ -130,6 +130,19 @@
 .priority-tag.medium { background-color: #FEF3C7; color: #D97706; }
 .priority-tag.low { background-color: #ECFDF5; color: #059669; }
 
+.project-tag-card {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-muted);
+  background-color: var(--bg-tertiary);
+  padding: 2px 8px;
+  border-radius: 6px;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .empty-column-hint {
   padding: 20px;
   border: 2px dashed var(--border-color);
