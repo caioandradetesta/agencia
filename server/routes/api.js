@@ -8,7 +8,13 @@ const db = require('../db');
 // Listar todos os clientes
 router.get('/clients', async (req, res) => {
   try {
-    const { rows } = await db.query('SELECT * FROM clients ORDER BY company ASC');
+    const { rows } = await db.query(`
+      SELECT c.*, COUNT(p.id)::int as project_count
+      FROM clients c
+      LEFT JOIN projects p ON c.id = p.client_id
+      GROUP BY c.id
+      ORDER BY c.company ASC
+    `);
     res.json(rows);
   } catch (err) {
     res.status(500).json({ error: err.message });

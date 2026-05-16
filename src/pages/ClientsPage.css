@@ -154,34 +154,35 @@
   border-top: 1px solid var(--border-color);
 }
 
-.projects-badge {
-  background-color: var(--bg-tertiary);
-  color: var(--text-primary);
-  padding: 4px 12px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 600;
-}
-
-.status-dot {
-  font-size: 12px;
-  font-weight: 600;
+.responsible-box {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  background-color: var(--bg-tertiary);
+  padding: 6px 12px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  border: 1px solid var(--border-color);
 }
 
-.status-dot::before {
-  content: '';
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
+.responsible-box strong {
+  color: var(--text-primary);
 }
 
-.status-dot.ativo { color: #10B981; }
-.status-dot.ativo::before { background-color: #10B981; }
-.status-dot.pendente { color: #F59E0B; }
-.status-dot.pendente::before { background-color: #F59E0B; }
+.projects-count-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: var(--accent-soft);
+  color: var(--accent-primary);
+  padding: 6px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
 
 .card-actions {
   margin-top: auto;

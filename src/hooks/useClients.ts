@@ -8,6 +8,7 @@ export interface Client {
   company: string;
   phone: string;
   logo_url?: string;
+  project_count?: number;
   created_at: string;
 }
 

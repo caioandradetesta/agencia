@@ -9,7 +9,9 @@ import {
   Filter,
   Loader2,
   Trash2,
-  Edit3
+  Edit3,
+  User,
+  Briefcase
 } from 'lucide-react';
 import { useClients } from '../hooks/useClients';
 import { AddClientModal } from '../components/AddClientModal';
@@ -94,7 +96,10 @@ export const ClientsPage: React.FC = () => {
                 
                 <div className="card-body">
                   <h3>{client.company}</h3>
-                  <p className="contact-name">{client.name}</p>
+                  <div className="responsible-box">
+                    <User size={14} />
+                    <span>Responsável: <strong>{client.name}</strong></span>
+                  </div>
                   
                   <div className="contact-info">
                     <div className="info-item">
@@ -108,10 +113,10 @@ export const ClientsPage: React.FC = () => {
                   </div>
 
                   <div className="card-footer">
-                    <div className="projects-badge">
-                      Parceiro Ativo
+                    <div className="projects-count-badge">
+                      <Briefcase size={14} />
+                      {client.project_count || 0} {client.project_count === 1 ? 'Projeto' : 'Projetos'}
                     </div>
-                    <span className="status-dot ativo">Ativo</span>
                   </div>
                 </div>
                 
