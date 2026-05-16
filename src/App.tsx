@@ -10,10 +10,6 @@ import { LoginPage } from './pages/LoginPage';
 import { AgendaPage } from './pages/AgendaPage';
 import { useAuth } from './context/AuthContext';
 import { 
-  BarChart3, 
-  TrendingUp, 
-  Users as UsersIcon, 
-  Clock,
   Loader2
 } from 'lucide-react';
 import './App.css';
