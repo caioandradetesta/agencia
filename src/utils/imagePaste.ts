@@ -21,7 +21,7 @@ export const handleImagePaste = async (
 
       try {
         // Mostra um feedback visual de carregamento se possível, mas aqui vamos focar na funcionalidade
-        const response = await api.post(`/api/uploads?type=${uploadType}`, formData, {
+        const response = await api.post(`/api/upload?type=${uploadType}`, formData, {
           headers: { 'Content-Type': 'multipart/form-data' }
         });
         

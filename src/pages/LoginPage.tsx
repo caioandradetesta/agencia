@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { api } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 import { LogIn, Mail, Lock, Loader2, AlertCircle } from 'lucide-react';
-import logo from '../assets/logo-light.png';
 import './LoginPage.css';
 
 export const LoginPage: React.FC = () => {
@@ -40,7 +39,7 @@ export const LoginPage: React.FC = () => {
     <div className="login-container">
       <div className="login-card animate-fade-in">
         <div className="login-header">
-          <img src={logo} alt="FLUXSeed" className="login-logo" />
+          <h1 className="logo">Agência<span>.</span></h1>
           <p>Entre na sua conta para gerenciar seus projetos.</p>
         </div>
 

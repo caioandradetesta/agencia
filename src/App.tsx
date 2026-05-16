@@ -23,7 +23,7 @@ const Dashboard = () => (
     <div className="dashboard-header">
       <div className="welcome">
         <h1>Bem-vindo ao Painel! 👋</h1>
-        <p>Aqui está o resumo das atividades da FLUXSeed.</p>
+        <p>Aqui está o resumo das atividades da agência.</p>
       </div>
       <div className="stats-grid">
         <div className="stat-card">

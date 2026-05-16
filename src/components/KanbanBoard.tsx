@@ -77,7 +77,7 @@ export const KanbanBoard: React.FC = () => {
       <div className="kanban-header">
         <div className="header-info-kanban">
           <h2>Central de Tarefas</h2>
-          <p>Gerencie o fluxo de trabalho e prazos da FLUXSeed.</p>
+          <p>Gerencie o fluxo de trabalho e prazos da agência.</p>
         </div>
 
         <div className="header-toolbar">

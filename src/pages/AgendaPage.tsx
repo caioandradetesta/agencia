@@ -85,7 +85,7 @@ export const AgendaPage: React.FC = () => {
     <div className="agenda-page animate-fade-in">
       <div className="agenda-header">
         <div className="header-info">
-          <h1>Agenda FLUXSeed</h1>
+          <h1>Agenda da Agência</h1>
           <p>Acompanhe prazos e entregas de forma visual.</p>
         </div>
         
