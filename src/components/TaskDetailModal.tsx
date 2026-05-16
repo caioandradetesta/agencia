@@ -7,6 +7,8 @@ import {
 import { api } from '../lib/api';
 import { useUsers } from '../hooks/useUsers';
 import { useProjects } from '../hooks/useProjects';
+import { handleImagePaste, insertAtCursor } from '../utils/imagePaste';
+import { RichText } from './RichText';
 import { useAuth } from '../context/AuthContext';
 import './Modal.css';
 
@@ -86,6 +88,22 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, onClose,
     } catch (err) {
       alert('Erro ao postar comentário');
     }
+  };
+
+  const handleDescriptionPaste = async (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+    await handleImagePaste(e, 'tasks', (url) => {
+      const fullUrl = `${window.location.origin}${url}`;
+      const newValue = insertAtCursor(e.currentTarget, `\n![imagem](${fullUrl})\n`);
+      setFormData({ ...formData, description: newValue });
+    });
+  };
+
+  const handleCommentPaste = async (e: React.ClipboardEvent<HTMLInputElement>) => {
+    await handleImagePaste(e, 'comments', (url) => {
+      const fullUrl = `${window.location.origin}${url}`;
+      const newValue = insertAtCursor(e.currentTarget, ` ${fullUrl} `);
+      setNewComment(newValue);
+    });
   };
 
   const toggleAssignee = (userId: string) => {
@@ -221,6 +239,7 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, onClose,
                 className="premium-textarea"
                 value={formData.description}
                 onChange={e => setFormData({ ...formData, description: e.target.value })}
+                onPaste={handleDescriptionPaste}
                 placeholder="Descreva o que precisa ser feito..."
               />
             </div>
@@ -299,7 +318,9 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, onClose,
                       </div>
                       <span className="c-date">{new Date(c.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span>
                     </div>
-                    <div className="comment-content">{c.content}</div>
+                    <div className="comment-content">
+                      <RichText content={c.content} />
+                    </div>
                   </div>
                 ))
               )}
@@ -312,6 +333,7 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, onClose,
                 placeholder="Escreva um comentário..."
                 value={newComment}
                 onChange={e => setNewComment(e.target.value)}
+                onPaste={handleCommentPaste}
               />
               <button type="submit" className="send-comment-btn" disabled={!newComment.trim()}>
                 <Send size={18} />

@@ -15,6 +15,8 @@ import {
   LogOut
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import logoLight from '../assets/logo-light.png';
+import logoDark from '../assets/logo-dark.png';
 import './Sidebar.css';
 
 interface NavItem {
@@ -81,7 +83,15 @@ export const Sidebar: React.FC = () => {
   return (
     <aside className={`sidebar ${isCollapsed ? 'collapsed' : ''}`}>
       <div className="sidebar-header">
-        {!isCollapsed && <h1 className="logo">Agência<span>.</span></h1>}
+        {!isCollapsed && (
+          <div className="logo-container">
+            <img 
+              src={theme === 'light' ? logoLight : logoDark} 
+              alt="FLUXSeed" 
+              className="logo-img" 
+            />
+          </div>
+        )}
         <button className="toggle-btn" onClick={() => setIsCollapsed(!isCollapsed)}>
           {isCollapsed ? <Menu size={20} /> : <ChevronLeft size={20} />}
         </button>

@@ -24,14 +24,17 @@
   height: 80px;
 }
 
-.logo {
-  font-size: 24px;
-  color: var(--text-primary);
-  letter-spacing: -0.5px;
+.logo-container {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  max-width: 150px;
 }
 
-.logo span {
-  color: var(--accent-primary);
+.logo-img {
+  max-height: 40px;
+  width: auto;
+  object-fit: contain;
 }
 
 .toggle-btn {

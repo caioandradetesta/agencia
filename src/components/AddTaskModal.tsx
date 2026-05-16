@@ -4,6 +4,7 @@ import { X, Loader2, Type, AlignLeft, Flag, Calendar, Users as UsersIcon, Check,
 import { useTasks } from '../hooks/useTasks';
 import { useUsers } from '../hooks/useUsers';
 import { useProjects } from '../hooks/useProjects';
+import { handleImagePaste, insertAtCursor } from '../utils/imagePaste';
 import './Modal.css';
 
 interface AddTaskModalProps {
@@ -34,6 +35,14 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ onClose, onSuccess }
         ? prev.assignee_ids.filter(id => id !== userId)
         : [...prev.assignee_ids, userId]
     }));
+  };
+
+  const handleDescriptionPaste = async (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+    await handleImagePaste(e, 'tasks', (url) => {
+      const fullUrl = `${window.location.origin}${url}`;
+      const newValue = insertAtCursor(e.currentTarget, `\n![imagem](${fullUrl})\n`);
+      setFormData({ ...formData, description: newValue });
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -92,6 +101,7 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ onClose, onSuccess }
               placeholder="Detalhes sobre o que precisa ser feito..."
               value={formData.description}
               onChange={e => setFormData({ ...formData, description: e.target.value })}
+              onPaste={handleDescriptionPaste}
             />
           </div>
 
