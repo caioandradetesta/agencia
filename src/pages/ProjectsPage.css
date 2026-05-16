@@ -66,11 +66,16 @@
   gap: 8px;
 }
 
-.delete-btn-p, .more-btn-p {
+.delete-btn-p, .more-btn-p, .edit-btn-p {
   padding: 8px;
   border-radius: 8px;
   color: var(--text-muted);
   transition: all 0.2s;
+}
+
+.edit-btn-p:hover {
+  color: var(--accent-primary);
+  background-color: var(--accent-soft);
 }
 
 .delete-btn-p:hover {

@@ -84,6 +84,25 @@ router.post('/projects', async (req, res) => {
   }
 });
 
+router.patch('/projects/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, client_id, status, description } = req.body;
+    const { rows } = await db.query(
+      `UPDATE projects 
+       SET name = COALESCE($1, name), 
+           client_id = COALESCE($2, client_id), 
+           status = COALESCE($3, status), 
+           description = COALESCE($4, description)
+       WHERE id = $5 RETURNING *`,
+      [name, client_id, status, description, id]
+    );
+    res.json(rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 router.delete('/projects/:id', async (req, res) => {
   try {
     const { id } = req.params;

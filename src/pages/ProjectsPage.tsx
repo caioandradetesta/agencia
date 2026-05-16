@@ -9,16 +9,19 @@ import {
   User, 
   ExternalLink,
   MoreVertical,
-  Trash2
+  Trash2,
+  Edit2
 } from 'lucide-react';
 import { api } from '../lib/api';
 import { AddProjectModal } from '../components/AddProjectModal';
+import { EditProjectModal } from '../components/EditProjectModal';
 import './ProjectsPage.css';
 
 export const ProjectsPage: React.FC = () => {
   const [projects, setProjects] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [editingProject, setEditingProject] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
@@ -99,12 +102,19 @@ export const ProjectsPage: React.FC = () => {
                     </div>
                     <div className="project-header-actions">
                       <button 
+                        className="edit-btn-p" 
+                        onClick={() => setEditingProject(project)}
+                        title="Editar Projeto"
+                      >
+                        <Edit2 size={16} />
+                      </button>
+                      <button 
                         className="delete-btn-p" 
                         onClick={() => handleDeleteProject(project.id, project.name)}
+                        title="Excluir Projeto"
                       >
                         <Trash2 size={16} />
                       </button>
-                      <button className="more-btn-p"><MoreVertical size={18} /></button>
                     </div>
                   </div>
                   
@@ -137,6 +147,14 @@ export const ProjectsPage: React.FC = () => {
       {showAddModal && (
         <AddProjectModal 
           onClose={() => setShowAddModal(false)} 
+          onSuccess={fetchProjects}
+        />
+      )}
+
+      {editingProject && (
+        <EditProjectModal 
+          project={editingProject}
+          onClose={() => setEditingProject(null)}
           onSuccess={fetchProjects}
         />
       )}
