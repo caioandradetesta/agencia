@@ -4,7 +4,7 @@ import { api } from '../lib/api';
 export interface Task {
   id: string;
   title: string;
-  status: 'todo' | 'doing' | 'review' | 'done';
+  status: string;
   project_id: string;
   description?: string;
   priority?: 'low' | 'medium' | 'high';
