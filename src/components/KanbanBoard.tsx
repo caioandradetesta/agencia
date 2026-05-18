@@ -171,7 +171,7 @@ export const KanbanBoard: React.FC = () => {
         </div>
       </div>
 
-      <TaskStats />
+      <TaskStats tasks={tasks} />
 
       {loading ? (
         <div className="loading-state">
