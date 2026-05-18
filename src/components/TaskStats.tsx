@@ -9,18 +9,18 @@ export const TaskStats: React.FC = () => {
   const { projects } = useProjects();
   const { users } = useUsers();
 
-  const activeProjects = projects.filter(p => p.status === 'active').length;
-  const completedTasks = tasks.filter(t => t.status === 'done').length;
+  const activeTasks = tasks.filter(t => t.status !== 'done' && t.status !== 'publicado').length;
+  const completedTasks = tasks.filter(t => t.status === 'done' || t.status === 'publicado').length;
   const totalTeam = users.length;
-  const highPriorityTasks = tasks.filter(t => t.priority === 'high' && t.status !== 'done').length;
+  const highPriorityTasks = tasks.filter(t => t.priority === 'high' && t.status !== 'done' && t.status !== 'publicado').length;
 
   return (
     <div className="stats-grid">
       <div className="stat-card">
         <div className="stat-icon blue"><BarChart3 size={20} /></div>
         <div className="stat-info">
-          <span className="label">Projetos Ativos</span>
-          <span className="value">{activeProjects}</span>
+          <span className="label">Tarefas Ativas</span>
+          <span className="value">{activeTasks}</span>
         </div>
       </div>
       <div className="stat-card">
