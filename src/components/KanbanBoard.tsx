@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  MoreVertical, Plus, Clock, MessageSquare, Loader2, 
-  Settings, Columns, List, Search 
+import {
+  MoreVertical, Plus, Clock, MessageSquare, Loader2,
+  Settings, Columns, List, Search
 } from 'lucide-react';
 import { useTasks } from '../hooks/useTasks';
 import { AddTaskModal } from './AddTaskModal';
@@ -17,14 +17,14 @@ export const KanbanBoard: React.FC = () => {
   const { tasks, loading, updateTaskStatus, refresh } = useTasks();
   const { users } = useUsers();
   const { projects } = useProjects();
-  
+
   const [columns, setColumns] = useState<any[]>([]);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [selectedTask, setSelectedTask] = useState<any>(null);
   const [viewMode, setViewMode] = useState<'kanban' | 'table'>('kanban');
   const [searchTerm, setSearchTerm] = useState('');
-  
+
   // Filtros
   const [filterPriority, setFilterPriority] = useState('');
   const [filterResponsible, setFilterResponsible] = useState('');
@@ -80,11 +80,11 @@ export const KanbanBoard: React.FC = () => {
 
   const filteredTasks = tasks.filter(t => {
     const matchesSearch = t.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         t.project_name?.toLowerCase().includes(searchTerm.toLowerCase());
+      t.project_name?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesPriority = !filterPriority || t.priority === filterPriority;
     const matchesProject = !filterProject || t.project_id === filterProject;
     const matchesResponsible = !filterResponsible || t.assignees?.some((a: any) => a.user_id === filterResponsible);
-    
+
     return matchesSearch && matchesPriority && matchesProject && matchesResponsible;
   });
 
@@ -99,17 +99,17 @@ export const KanbanBoard: React.FC = () => {
         <div className="header-toolbar">
           <div className="search-bar-tasks">
             <Search size={18} />
-            <input 
-              type="text" 
-              placeholder="Buscar por nome ou projeto..." 
+            <input
+              type="text"
+              placeholder="Buscar por nome ou projeto..."
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
             />
           </div>
 
           <div className="filter-group-tasks">
-            <select 
-              value={filterPriority} 
+            <select
+              value={filterPriority}
               onChange={e => setFilterPriority(e.target.value)}
               className="filter-select"
             >
@@ -119,8 +119,8 @@ export const KanbanBoard: React.FC = () => {
               <option value="low">Baixa</option>
             </select>
 
-            <select 
-              value={filterProject} 
+            <select
+              value={filterProject}
               onChange={e => setFilterProject(e.target.value)}
               className="filter-select"
             >
@@ -130,8 +130,8 @@ export const KanbanBoard: React.FC = () => {
               ))}
             </select>
 
-            <select 
-              value={filterResponsible} 
+            <select
+              value={filterResponsible}
               onChange={e => setFilterResponsible(e.target.value)}
               className="filter-select"
             >
@@ -143,14 +143,14 @@ export const KanbanBoard: React.FC = () => {
           </div>
 
           <div className="view-toggle">
-            <button 
+            <button
               className={`toggle-btn ${viewMode === 'kanban' ? 'active' : ''}`}
               onClick={() => setViewMode('kanban')}
               title="Visualização em Quadro"
             >
               <Columns size={18} />
             </button>
-            <button 
+            <button
               className={`toggle-btn ${viewMode === 'table' ? 'active' : ''}`}
               onClick={() => setViewMode('table')}
               title="Visualização em Tabela"
@@ -171,7 +171,7 @@ export const KanbanBoard: React.FC = () => {
         </div>
       </div>
 
-      <TaskStats tasks={tasks} />
+      <TaskStats />
 
       {loading ? (
         <div className="loading-state">
@@ -181,8 +181,8 @@ export const KanbanBoard: React.FC = () => {
       ) : viewMode === 'kanban' ? (
         <div className="kanban-board">
           {columns.map((column: any) => (
-            <div 
-              key={column.id} 
+            <div
+              key={column.id}
               className="kanban-column"
               onDrop={(e) => onDrop(e, column.slug)}
               onDragOver={onDragOver}
@@ -199,8 +199,8 @@ export const KanbanBoard: React.FC = () => {
                 <div className="column-header-right">
                   {column.responsible_user_id && (
                     <div className="col-owner" title={`Responsável: ${column.responsible_name}`}>
-                      <div 
-                        className="col-owner-avatar" 
+                      <div
+                        className="col-owner-avatar"
                         style={{ backgroundColor: column.responsible_color || 'var(--accent-primary)' }}
                       >
                         {column.responsible_name?.charAt(0)}
@@ -213,8 +213,8 @@ export const KanbanBoard: React.FC = () => {
 
               <div className="task-list">
                 {filteredTasks.filter(t => t.status === column.slug).map(task => (
-                  <div 
-                    key={task.id} 
+                  <div
+                    key={task.id}
                     className="task-card animate-fade-in"
                     draggable
                     onDragStart={(e) => onDragStart(e, task.id)}
@@ -231,7 +231,7 @@ export const KanbanBoard: React.FC = () => {
                     </div>
                     <h4>{task.title}</h4>
                     <p className="task-desc-short">{task.description}</p>
-                    
+
                     <div className="task-footer">
                       <div className="task-meta">
                         <div className="meta-item">
@@ -245,9 +245,9 @@ export const KanbanBoard: React.FC = () => {
                       </div>
                       <div className="task-assignees">
                         {task.assignees?.map((a: any) => (
-                          <div 
-                            key={a.user_id} 
-                            className="assignee-avatar" 
+                          <div
+                            key={a.user_id}
+                            className="assignee-avatar"
                             style={{ backgroundColor: a.color || 'var(--accent-primary)' }}
                             title={a.full_name}
                           >
@@ -258,7 +258,7 @@ export const KanbanBoard: React.FC = () => {
                     </div>
                   </div>
                 ))}
-                
+
                 {filteredTasks.filter(t => t.status === column.slug).length === 0 && (
                   <div className="empty-column-hint">Arrastar aqui</div>
                 )}
@@ -316,9 +316,9 @@ export const KanbanBoard: React.FC = () => {
                     <td>
                       <div className="assignees-mini-list">
                         {task.assignees?.map((a: any) => (
-                          <div 
-                            key={a.user_id} 
-                            className="avatar-mini" 
+                          <div
+                            key={a.user_id}
+                            className="avatar-mini"
                             style={{ backgroundColor: a.color || 'var(--accent-primary)' }}
                             title={a.full_name}
                           >
@@ -345,14 +345,14 @@ export const KanbanBoard: React.FC = () => {
       )}
 
       {showAddModal && (
-        <AddTaskModal 
-          onClose={() => setShowAddModal(false)} 
+        <AddTaskModal
+          onClose={() => setShowAddModal(false)}
           onSuccess={refresh}
         />
       )}
 
       {selectedTask && (
-        <TaskDetailModal 
+        <TaskDetailModal
           task={selectedTask}
           onClose={() => setSelectedTask(null)}
           onSuccess={refresh}
@@ -360,7 +360,7 @@ export const KanbanBoard: React.FC = () => {
       )}
 
       {showSettingsModal && (
-        <BoardSettingsModal 
+        <BoardSettingsModal
           onClose={() => setShowSettingsModal(false)}
           onSuccess={() => {
             fetchColumns();

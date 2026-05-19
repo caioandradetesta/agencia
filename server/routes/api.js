@@ -225,6 +225,10 @@ router.patch('/tasks/:id', async (req, res) => {
     
     await db.query('BEGIN');
 
+    // Buscar status anterior para automação
+    const { rows: oldTaskRows } = await db.query('SELECT status FROM tasks WHERE id = $1', [id]);
+    const oldStatus = oldTaskRows.length > 0 ? oldTaskRows[0].status : null;
+
     // Atualização dos campos básicos
     const { rows } = await db.query(
       `UPDATE tasks 
@@ -282,7 +286,7 @@ router.patch('/tasks/:id', async (req, res) => {
     }
 
     // --- AUTOMAÇÃO POR COLUNA KANBAN (PROJETO) ---
-    if (status) {
+    if (status && status !== oldStatus) {
       console.log(`\n🤖 [Automação] Iniciando para status: "${status}"`);
       const { rows: colConfig } = await db.query(
         'SELECT id, responsible_user_ids, title FROM kanban_columns WHERE slug ILIKE $1',
@@ -341,7 +345,7 @@ router.patch('/tasks/:id', async (req, res) => {
     }
     
     // --- AUTOMAÇÃO DE RECORRÊNCIA ---
-    if (status === 'done' && rows[0].recurrence) {
+    if (status === 'done' && oldStatus !== 'done' && rows[0].recurrence) {
       const task = rows[0];
       const nextDueDate = new Date(task.due_date || new Date());
       
