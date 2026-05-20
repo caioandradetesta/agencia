@@ -1,7 +1,22 @@
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 const db = require('../db');
+
+const JWT_SECRET = process.env.JWT_SECRET || 'agencia-secret-key-2024';
+
+const getCurrentUserId = (req) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+  if (!token) return null;
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    return decoded.id;
+  } catch (err) {
+    return null;
+  }
+};
 
 // --- CLIENTES ---
 
@@ -187,6 +202,7 @@ router.get('/tasks', async (req, res) => {
     const { rows } = await db.query(`
       SELECT t.*, 
              pr.name as project_name,
+             creator_prof.full_name as creator_name,
              COALESCE(
                json_agg(
                  json_build_object(
@@ -202,7 +218,8 @@ router.get('/tasks', async (req, res) => {
       LEFT JOIN projects pr ON t.project_id = pr.id
       LEFT JOIN task_assignments ta ON t.id = ta.task_id
       LEFT JOIN profiles p ON ta.user_id = p.user_id
-      GROUP BY t.id, pr.name
+      LEFT JOIN profiles creator_prof ON t.created_by = creator_prof.user_id
+      GROUP BY t.id, pr.name, creator_prof.full_name
       ORDER BY 
         CASE 
           WHEN t.priority = 'high' THEN 1 
@@ -222,12 +239,27 @@ router.patch('/tasks/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const { status, title, description, priority, due_date, assignee_ids, workflow_tag, recurrence } = req.body;
+    const userId = getCurrentUserId(req);
     
     await db.query('BEGIN');
 
-    // Buscar status anterior para automação
-    const { rows: oldTaskRows } = await db.query('SELECT status FROM tasks WHERE id = $1', [id]);
-    const oldStatus = oldTaskRows.length > 0 ? oldTaskRows[0].status : null;
+    // Buscar estado atual completo para histórico
+    const { rows: oldTaskRows } = await db.query(
+      'SELECT status, title, description, priority, due_date, recurrence FROM tasks WHERE id = $1',
+      [id]
+    );
+    if (oldTaskRows.length === 0) {
+      await db.query('ROLLBACK');
+      return res.status(404).json({ error: 'Tarefa não encontrada' });
+    }
+    const before = oldTaskRows[0];
+    const oldStatus = before.status;
+
+    const { rows: oldAssignees } = await db.query(
+      'SELECT user_id FROM task_assignments WHERE task_id = $1',
+      [id]
+    );
+    const beforeAssignees = oldAssignees.map(a => a.user_id).sort();
 
     // Atualização dos campos básicos
     const { rows } = await db.query(
@@ -260,8 +292,8 @@ router.patch('/tasks/:id', async (req, res) => {
     // Sincronização dos responsáveis (se enviados)
     if (assignee_ids && Array.isArray(assignee_ids)) {
       // Buscar responsáveis atuais antes de deletar para saber quem é novo
-      const { rows: oldAssignees } = await db.query('SELECT user_id FROM task_assignments WHERE task_id = $1', [id]);
-      const oldIds = oldAssignees.map(a => a.user_id);
+      const { rows: oldAssigneesQuery } = await db.query('SELECT user_id FROM task_assignments WHERE task_id = $1', [id]);
+      const oldIds = oldAssigneesQuery.map(a => a.user_id);
       const newIds = assignee_ids.filter(id => !oldIds.includes(id));
 
       await db.query('DELETE FROM task_assignments WHERE task_id = $1', [id]);
@@ -283,6 +315,46 @@ router.patch('/tasks/:id', async (req, res) => {
           `Você foi atribuído à tarefa "${rows[0].title}".`
         ]);
       }
+    }
+
+    // Registrar histórico de alterações
+    const changes = {};
+    if (status !== undefined && status !== before.status) {
+      changes.status = { old: before.status, new: status };
+    }
+    if (title !== undefined && title !== before.title) {
+      changes.title = { old: before.title, new: title };
+    }
+    if (description !== undefined && description !== before.description) {
+      changes.description = { old: before.description, new: description };
+    }
+    if (priority !== undefined && priority !== before.priority) {
+      changes.priority = { old: before.priority, new: priority };
+    }
+
+    const beforeTime = before.due_date ? new Date(before.due_date).getTime() : null;
+    const targetDueDate = (due_date === '' || !due_date) ? null : due_date;
+    const afterTime = targetDueDate ? new Date(targetDueDate).getTime() : null;
+    if (due_date !== undefined && beforeTime !== afterTime) {
+      changes.due_date = { old: before.due_date, new: targetDueDate };
+    }
+
+    if (recurrence !== undefined && recurrence !== before.recurrence) {
+      changes.recurrence = { old: before.recurrence, new: recurrence || null };
+    }
+
+    if (assignee_ids && Array.isArray(assignee_ids)) {
+      const afterAssignees = [...assignee_ids].sort();
+      if (JSON.stringify(beforeAssignees) !== JSON.stringify(afterAssignees)) {
+        changes.assignees = { old: beforeAssignees, new: afterAssignees };
+      }
+    }
+
+    if (Object.keys(changes).length > 0) {
+      await db.query(
+        'INSERT INTO task_history (task_id, user_id, action, details) VALUES ($1, $2, $3, $4)',
+        [id, userId, 'update', JSON.stringify(changes)]
+      );
     }
 
     // --- AUTOMAÇÃO POR COLUNA KANBAN (PROJETO) ---
@@ -371,11 +443,12 @@ router.patch('/tasks/:id', async (req, res) => {
 
     await db.query('COMMIT');
     
-    // Buscar a tarefa completa com os novos responsáveis e dados do projeto
+    // Buscar a tarefa completa com os novos responsáveis, dados do projeto e criador
     const { rows: fullTask } = await db.query(`
       SELECT 
         t.*,
         p.name as project_name,
+        creator_prof.full_name as creator_name,
         json_agg(
           json_build_object(
             'user_id', pr.user_id,
@@ -387,8 +460,9 @@ router.patch('/tasks/:id', async (req, res) => {
       LEFT JOIN projects p ON t.project_id = p.id
       LEFT JOIN task_assignments ta ON t.id = ta.task_id
       LEFT JOIN profiles pr ON ta.user_id = pr.user_id
+      LEFT JOIN profiles creator_prof ON t.created_by = creator_prof.user_id
       WHERE t.id = $1
-      GROUP BY t.id, p.name
+      GROUP BY t.id, p.name, creator_prof.full_name
     `, [id]);
 
     res.json(fullTask[0]);
@@ -534,6 +608,23 @@ router.post('/tasks/:id/comments', async (req, res) => {
   }
 });
 
+// Obter histórico de alterações de uma tarefa
+router.get('/tasks/:id/history', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { rows } = await db.query(`
+      SELECT th.*, p.full_name as user_name, p.color as user_color
+      FROM task_history th
+      LEFT JOIN profiles p ON th.user_id = p.user_id
+      WHERE th.task_id = $1
+      ORDER BY th.created_at DESC
+    `, [id]);
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // --- ANEXOS DE TAREFAS ---
 
 // Listar anexos de uma tarefa
@@ -607,12 +698,13 @@ router.delete('/attachments/:id', async (req, res) => {
 router.post('/tasks', async (req, res) => {
   try {
     const { project_id, title, status, description, priority, due_date, assignee_ids, recurrence } = req.body;
+    const userId = getCurrentUserId(req);
     
     await db.query('BEGIN');
     
     const { rows } = await db.query(
-      'INSERT INTO tasks (project_id, title, status, description, priority, due_date, recurrence) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
-      [project_id || null, title, status || 'todo', description || '', priority || 'medium', due_date || null, recurrence || null]
+      'INSERT INTO tasks (project_id, title, status, description, priority, due_date, recurrence, created_by) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',
+      [project_id || null, title, status || 'todo', description || '', priority || 'medium', due_date || null, recurrence || null, userId]
     );
     
     const task = rows[0];
@@ -625,6 +717,12 @@ router.post('/tasks', async (req, res) => {
         );
       }
     }
+    
+    // Registrar histórico inicial de criação
+    await db.query(
+      'INSERT INTO task_history (task_id, user_id, action, details) VALUES ($1, $2, $3, $4)',
+      [task.id, userId, 'create', JSON.stringify({ title, status: status || 'todo' })]
+    );
     
     await db.query('COMMIT');
     res.json(task);

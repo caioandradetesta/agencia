@@ -1,10 +1,13 @@
 import React from 'react';
 import { BarChart3, TrendingUp, Users as UsersIcon, AlertCircle } from 'lucide-react';
-import { useTasks } from '../hooks/useTasks';
+import type { Task } from '../hooks/useTasks';
 import { useUsers } from '../hooks/useUsers';
 
-export const TaskStats: React.FC = () => {
-  const { tasks } = useTasks();
+interface TaskStatsProps {
+  tasks: Task[];
+}
+
+export const TaskStats: React.FC<TaskStatsProps> = ({ tasks }) => {
   const { users } = useUsers();
 
   const activeTasks = tasks.filter(t => t.status !== 'done' && t.status !== 'publicado').length;

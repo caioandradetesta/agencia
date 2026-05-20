@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { 
     X, Loader2, Type, AlignLeft, Flag, Calendar, 
   Users as UsersIcon, Send, MessageSquare, Layout, RefreshCcw, Trash2, Briefcase,
-  Paperclip, Link, FileText, Check, Edit2
+  Paperclip, Link, FileText, Check, Edit2, History
 } from 'lucide-react';
 import { api } from '../lib/api';
 import { useUsers } from '../hooks/useUsers';
@@ -12,6 +12,42 @@ import { handleImagePaste, insertAtCursor } from '../utils/imagePaste';
 import { RichText } from './RichText';
 import { useAuth } from '../context/AuthContext';
 import './Modal.css';
+const translateField = (field: string) => {
+  const map: Record<string, string> = {
+    title: 'Título',
+    description: 'Descrição',
+    status: 'Estágio',
+    priority: 'Prioridade',
+    due_date: 'Prazo',
+    recurrence: 'Recorrência',
+    assignees: 'Responsáveis'
+  };
+  return map[field] || field;
+};
+
+const formatValue = (field: string, value: any, usersList: any[], columnsList: any[]) => {
+  if (value === null || value === undefined || value === '') return 'vazio';
+  
+  if (field === 'status') {
+    const col = columnsList.find(c => c.slug === value);
+    return col ? col.title : value;
+  }
+  if (field === 'priority') {
+    const map: Record<string, string> = { low: 'Baixa', medium: 'Média', high: 'Alta' };
+    return map[value] || value;
+  }
+  if (field === 'due_date') {
+    return new Date(value).toLocaleDateString('pt-BR');
+  }
+  if (field === 'assignees') {
+    if (!Array.isArray(value)) return 'nenhum';
+    return value.map(userId => {
+      const u = usersList.find(usr => usr.user_id === userId);
+      return u ? u.full_name : userId;
+    }).join(', ') || 'nenhum';
+  }
+  return String(value);
+};
 
 interface TaskDetailModalProps {
   task: any;
@@ -27,6 +63,9 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, onClose,
   const [commentsLoading, setCommentsLoading] = useState(true);
   const [comments, setComments] = useState<any[]>([]);
   const [kanbanColumns, setKanbanColumns] = useState<any[]>([]);
+  const [activeTab, setActiveTab] = useState<'comments' | 'history'>('comments');
+  const [history, setHistory] = useState<any[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(true);
   const [newComment, setNewComment] = useState('');
   const [formData, setFormData] = useState({
     title: task.title || '',
@@ -64,11 +103,26 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, onClose,
   const fileInputRef = useRef<HTMLInputElement>(null);
   const commentsEndRef = useRef<HTMLDivElement>(null);
 
+  const fetchHistory = async () => {
+    try {
+      setHistoryLoading(true);
+      const res = await api.get(`/api/tasks/${task.id}/history`);
+      setHistory(res.data);
+    } catch (err) {
+      console.error('Erro ao buscar histórico:', err);
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchComments();
     fetchKanbanColumns();
     fetchAttachments();
-  }, [task.id]);
+    if (activeTab === 'history') {
+      fetchHistory();
+    }
+  }, [task.id, activeTab]);
 
   const fetchAttachments = async () => {
     try {
@@ -338,7 +392,18 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, onClose,
             >
               {currentColumn?.title || formData.status}
             </span>
-            <h2>Detalhes da Tarefa</h2>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+              <h2 style={{ margin: 0, lineHeight: 1.2 }}>Detalhes da Tarefa</h2>
+              {task.creator_name ? (
+                <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                  Criado por <strong>{task.creator_name}</strong> em {new Date(task.created_at).toLocaleDateString('pt-BR')} às {new Date(task.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                </span>
+              ) : task.created_at ? (
+                <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                  Criado em {new Date(task.created_at).toLocaleDateString('pt-BR')} às {new Date(task.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                </span>
+              ) : null}
+            </div>
           </div>
           <button className="close-btn" onClick={onClose}><X size={20} /></button>
         </div>
@@ -701,67 +766,130 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, onClose,
             </div>
           </form>
 
-          {/* Lado Direito: Comentários */}
+          {/* Lado Direito: Comentários / Histórico */}
           <div className="comments-side">
-            <div className="comments-header">
-              <MessageSquare size={16} />
-              <h3>Comentários</h3>
-            </div>
-
-            <div className="comments-list">
-              {commentsLoading ? (
-                <div className="loading-comments"><Loader2 className="animate-spin" /></div>
-              ) : comments.length === 0 ? (
-                <div className="empty-comments">Nenhum comentário ainda.</div>
-              ) : (
-                comments.map(c => (
-                  <div key={c.id} className={`comment-item ${c.user_id === currentUser?.id ? 'own' : ''}`}>
-                    <div className="comment-header">
-                      <div className="comment-user">
-                        <div className="c-avatar" style={{ backgroundColor: c.color || 'var(--accent-primary)' }}>
-                          {c.full_name?.charAt(0)}
-                        </div>
-                        <span className="c-name">{c.full_name}</span>
-                      </div>
-                      <span className="c-date">{new Date(c.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span>
-                    </div>
-                    <div className="comment-content">
-                      <RichText content={c.content} />
-                    </div>
-                  </div>
-                ))
-              )}
-              <div ref={commentsEndRef} />
-            </div>
-
-            <form onSubmit={handlePostComment} className="comment-input-area">
-              {showMentionList && filteredMentionUsers.length > 0 && (
-                <div className="mention-list-dropdown">
-                  {filteredMentionUsers.map(u => (
-                    <div 
-                      key={u.user_id} 
-                      className="mention-item"
-                      onClick={() => selectMention(u)}
-                    >
-                      <div className="m-avatar" style={{ backgroundColor: u.color || 'var(--accent-primary)' }}>
-                        {u.full_name?.charAt(0)}
-                      </div>
-                      <span>{u.full_name}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-              <input 
-                type="text" 
-                placeholder="Escreva um comentário (use @ para marcar)..."
-                value={newComment}
-                onChange={handleCommentChange}
-                onPaste={handleCommentPaste}
-              />
-              <button type="submit" className="send-comment-btn" disabled={!newComment.trim()}>
-                <Send size={18} />
+            <div className="side-tabs">
+              <button 
+                type="button"
+                className={`side-tab-btn ${activeTab === 'comments' ? 'active' : ''}`}
+                onClick={() => setActiveTab('comments')}
+              >
+                <MessageSquare size={16} />
+                Comentários
               </button>
-            </form>
+              <button 
+                type="button"
+                className={`side-tab-btn ${activeTab === 'history' ? 'active' : ''}`}
+                onClick={() => setActiveTab('history')}
+              >
+                <History size={16} />
+                Histórico
+              </button>
+            </div>
+
+            {activeTab === 'comments' ? (
+              <>
+                <div className="comments-list">
+                  {commentsLoading ? (
+                    <div className="loading-comments"><Loader2 className="animate-spin" /></div>
+                  ) : comments.length === 0 ? (
+                    <div className="empty-comments">Nenhum comentário ainda.</div>
+                  ) : (
+                    comments.map(c => (
+                      <div key={c.id} className={`comment-item ${c.user_id === currentUser?.id ? 'own' : ''}`}>
+                        <div className="comment-header">
+                          <div className="comment-user">
+                            <div className="c-avatar" style={{ backgroundColor: c.color || 'var(--accent-primary)' }}>
+                              {c.full_name?.charAt(0)}
+                            </div>
+                            <span className="c-name">{c.full_name}</span>
+                          </div>
+                          <span className="c-date">{new Date(c.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span>
+                        </div>
+                        <div className="comment-content">
+                          <RichText content={c.content} />
+                        </div>
+                      </div>
+                    ))
+                  )}
+                  <div ref={commentsEndRef} />
+                </div>
+
+                <form onSubmit={handlePostComment} className="comment-input-area">
+                  {showMentionList && filteredMentionUsers.length > 0 && (
+                    <div className="mention-list-dropdown">
+                      {filteredMentionUsers.map(u => (
+                        <div 
+                          key={u.user_id} 
+                          className="mention-item"
+                          onClick={() => selectMention(u)}
+                        >
+                          <div className="m-avatar" style={{ backgroundColor: u.color || 'var(--accent-primary)' }}>
+                            {u.full_name?.charAt(0)}
+                          </div>
+                          <span>{u.full_name}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <input 
+                    type="text" 
+                    placeholder="Escreva um comentário (use @ para marcar)..."
+                    value={newComment}
+                    onChange={handleCommentChange}
+                    onPaste={handleCommentPaste}
+                  />
+                  <button type="submit" className="send-comment-btn" disabled={!newComment.trim()}>
+                    <Send size={18} />
+                  </button>
+                </form>
+              </>
+            ) : (
+              <div className="history-list">
+                {historyLoading ? (
+                  <div className="loading-comments"><Loader2 className="animate-spin" /></div>
+                ) : history.length === 0 ? (
+                  <div className="empty-comments">Nenhuma alteração registrada ainda.</div>
+                ) : (
+                  history.map(h => (
+                    <div key={h.id} className="history-item">
+                      <div className="history-header">
+                        <div className="history-user">
+                          <div className="h-avatar" style={{ backgroundColor: h.user_color || 'var(--accent-primary)' }}>
+                            {h.user_name ? h.user_name.charAt(0) : '?'}
+                          </div>
+                          <span className="h-name">{h.user_name || 'Sistema'}</span>
+                        </div>
+                        <span className="h-date">
+                          {new Date(h.created_at).toLocaleDateString('pt-BR')} {new Date(h.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      </div>
+                      <div className="history-body">
+                        {h.action === 'create' ? (
+                          <span>Tarefa criada com o título <strong>"{h.details?.title}"</strong>.</span>
+                        ) : h.action === 'update' && h.details ? (
+                          <div className="history-changes">
+                            {Object.keys(h.details).map(field => {
+                              const change = h.details[field];
+                              return (
+                                <div key={field} className="history-change-item">
+                                  <strong>{translateField(field)}</strong> alterado de{' '}
+                                  <span className="old-val">"{formatValue(field, change.old, users, kanbanColumns)}"</span>{' '}
+                                  para{' '}
+                                  <span className="new-val">"{formatValue(field, change.new, users, kanbanColumns)}"</span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        ) : (
+                          <span>Alteração realizada.</span>
+                        )}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>

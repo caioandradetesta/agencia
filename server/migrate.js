@@ -80,6 +80,22 @@ async function migrate() {
       );
     `, 'Tabela task_attachments (V8)');
 
+    // Histórico de Tarefas (V9)
+    await runQuery(`
+      ALTER TABLE tasks ADD COLUMN IF NOT EXISTS created_by UUID REFERENCES users(id) ON DELETE SET NULL;
+    `, 'Coluna created_by em tasks (V9)');
+
+    await runQuery(`
+      CREATE TABLE IF NOT EXISTS task_history (
+        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+        task_id UUID REFERENCES tasks(id) ON DELETE CASCADE,
+        user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+        action TEXT NOT NULL,
+        details JSONB,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+      );
+    `, 'Tabela task_history (V9)');
+
     console.log('✅ Migração V6 finalizada!');
   } catch (err) {
     console.error('❌ ERRO NO PROCESSO DE MIGRAÇÃO:', err);
