@@ -534,6 +534,76 @@ router.post('/tasks/:id/comments', async (req, res) => {
   }
 });
 
+// --- ANEXOS DE TAREFAS ---
+
+// Listar anexos de uma tarefa
+router.get('/tasks/:id/attachments', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { rows } = await db.query(
+      'SELECT * FROM task_attachments WHERE task_id = $1 ORDER BY created_at ASC',
+      [id]
+    );
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Criar anexo em uma tarefa
+router.post('/tasks/:id/attachments', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, type, url } = req.body;
+    if (!name || !type || !url) {
+      return res.status(400).json({ error: 'Campos nome, tipo e url são obrigatórios.' });
+    }
+    const { rows } = await db.query(
+      'INSERT INTO task_attachments (task_id, name, type, url) VALUES ($1, $2, $3, $4) RETURNING *',
+      [id, name, type, url]
+    );
+    res.json(rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Editar um anexo
+router.patch('/attachments/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, type, url } = req.body;
+    const { rows } = await db.query(
+      `UPDATE task_attachments 
+       SET name = COALESCE($1, name), 
+           type = COALESCE($2, type), 
+           url = COALESCE($3, url) 
+       WHERE id = $4 RETURNING *`,
+      [name, type, url, id]
+    );
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Anexo não encontrado.' });
+    }
+    res.json(rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Excluir um anexo
+router.delete('/attachments/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { rows } = await db.query('DELETE FROM task_attachments WHERE id = $1 RETURNING *', [id]);
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Anexo não encontrado.' });
+    }
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 router.post('/tasks', async (req, res) => {
   try {
     const { project_id, title, status, description, priority, due_date, assignee_ids, recurrence } = req.body;

@@ -133,6 +133,16 @@ CREATE TABLE IF NOT EXISTS kanban_columns (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
+-- 14. Anexos de Tarefas
+CREATE TABLE IF NOT EXISTS task_attachments (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  task_id UUID REFERENCES tasks(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  type TEXT NOT NULL,
+  url TEXT NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
 -- Dados iniciais (Seed)
 INSERT INTO kanban_columns (title, slug, color, sort_order)
 VALUES 

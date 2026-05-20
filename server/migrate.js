@@ -68,6 +68,18 @@ async function migrate() {
       UPDATE kanban_columns SET responsible_user_ids = '{}' WHERE responsible_user_ids IS NULL;
     `, 'Sincronizando responsible_user_ids em kanban_columns');
 
+    // Garantir criação da tabela task_attachments (V8)
+    await runQuery(`
+      CREATE TABLE IF NOT EXISTS task_attachments (
+        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+        task_id UUID REFERENCES tasks(id) ON DELETE CASCADE,
+        name TEXT NOT NULL,
+        type TEXT NOT NULL,
+        url TEXT NOT NULL,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+      );
+    `, 'Tabela task_attachments (V8)');
+
     console.log('✅ Migração V6 finalizada!');
   } catch (err) {
     console.error('❌ ERRO NO PROCESSO DE MIGRAÇÃO:', err);

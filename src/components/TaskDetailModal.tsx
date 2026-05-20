@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { 
-  X, Loader2, Type, AlignLeft, Flag, Calendar, 
-  Users as UsersIcon, Send, MessageSquare, Layout, RefreshCcw, Trash2, Briefcase 
+    X, Loader2, Type, AlignLeft, Flag, Calendar, 
+  Users as UsersIcon, Send, MessageSquare, Layout, RefreshCcw, Trash2, Briefcase,
+  Paperclip, Link, FileText, Check, Edit2
 } from 'lucide-react';
 import { api } from '../lib/api';
 import { useUsers } from '../hooks/useUsers';
@@ -44,12 +45,149 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, onClose,
   const [showMentionList, setShowMentionList] = useState(false);
   const [mentionStartIndex, setMentionStartIndex] = useState(-1);
 
+  // Estados para Anexos
+  const [attachmentsLoading, setAttachmentsLoading] = useState(true);
+  const [attachments, setAttachments] = useState<any[]>([]);
+  const [attachmentForm, setAttachmentForm] = useState({
+    name: '',
+    type: 'file', // 'file' | 'link'
+    url: ''
+  });
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [uploadingAttachment, setUploadingAttachment] = useState(false);
+  const [editingAttachmentId, setEditingAttachmentId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState({
+    name: '',
+    url: ''
+  });
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const commentsEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetchComments();
     fetchKanbanColumns();
+    fetchAttachments();
   }, [task.id]);
+
+  const fetchAttachments = async () => {
+    try {
+      setAttachmentsLoading(true);
+      const res = await api.get(`/api/tasks/${task.id}/attachments`);
+      setAttachments(res.data);
+    } catch (err) {
+      console.error('Erro ao buscar anexos:', err);
+    } finally {
+      setAttachmentsLoading(false);
+    }
+  };
+
+  const handleAddAttachment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!attachmentForm.name.trim()) {
+      alert('Por favor, informe o nome do anexo.');
+      return;
+    }
+
+    try {
+      setUploadingAttachment(true);
+      let finalUrl = attachmentForm.url;
+
+      if (attachmentForm.type === 'file') {
+        if (!selectedFile) {
+          alert('Por favor, selecione um arquivo.');
+          setUploadingAttachment(false);
+          return;
+        }
+        const { uploadFile } = await import('../lib/storage');
+        finalUrl = await uploadFile('attachments', selectedFile);
+      } else {
+        if (!finalUrl.trim()) {
+          alert('Por favor, informe a URL/link do anexo.');
+          setUploadingAttachment(false);
+          return;
+        }
+        if (!/^https?:\/\//i.test(finalUrl)) {
+          finalUrl = 'http://' + finalUrl;
+        }
+      }
+
+      const res = await api.post(`/api/tasks/${task.id}/attachments`, {
+        name: attachmentForm.name,
+        type: attachmentForm.type,
+        url: finalUrl
+      });
+
+      setAttachments(prev => [...prev, res.data]);
+      setAttachmentForm({ name: '', type: 'file', url: '' });
+      setSelectedFile(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    } catch (err: any) {
+      alert('Erro ao adicionar anexo: ' + (err.response?.data?.error || err.message));
+    } finally {
+      setUploadingAttachment(false);
+    }
+  };
+
+  const handleDeleteAttachment = async (attachmentId: string) => {
+    if (!window.confirm('Tem certeza que deseja excluir este anexo?')) return;
+
+    try {
+      await api.delete(`/api/attachments/${attachmentId}`);
+      setAttachments(prev => prev.filter(att => att.id !== attachmentId));
+    } catch (err) {
+      alert('Erro ao excluir anexo');
+    }
+  };
+
+  const handleStartEdit = (att: any) => {
+    setEditingAttachmentId(att.id);
+    setEditForm({
+      name: att.name,
+      url: att.url
+    });
+  };
+
+  const handleCancelEdit = () => {
+    setEditingAttachmentId(null);
+    setEditForm({ name: '', url: '' });
+  };
+
+  const handleSaveEdit = async (attachmentId: string, type: string) => {
+    if (!editForm.name.trim()) {
+      alert('O nome do anexo não pode ser vazio.');
+      return;
+    }
+    if (type === 'link' && !editForm.url.trim()) {
+      alert('O link do anexo não pode ser vazio.');
+      return;
+    }
+
+    try {
+      let finalUrl = editForm.url;
+      if (type === 'link' && !/^https?:\/\//i.test(finalUrl)) {
+        finalUrl = 'http://' + finalUrl;
+      }
+      const res = await api.patch(`/api/attachments/${attachmentId}`, {
+        name: editForm.name,
+        url: type === 'link' ? finalUrl : undefined
+      });
+
+      setAttachments(prev => prev.map(att => att.id === attachmentId ? res.data : att));
+      setEditingAttachmentId(null);
+    } catch (err) {
+      alert('Erro ao atualizar anexo');
+    }
+  };
+
+  const getAttachmentUrl = (url: string) => {
+    if (!url) return '#';
+    if (url.startsWith('http://') || url.startsWith('https://')) return url;
+    const API_URL = import.meta.env.PROD ? '' : 'http://localhost:3000';
+    return `${API_URL}${url}`;
+  };
 
   useEffect(() => {
     scrollToBottom();
@@ -317,6 +455,233 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, onClose,
                     <span className="assignee-name">{u.full_name.split(' ')[0]}</span>
                   </div>
                 ))}
+              </div>
+            </div>
+
+            {/* Linha Divisória */}
+            <hr className="premium-divider" />
+
+            {/* Seção de Anexos */}
+            <div className="attachments-section">
+              <div className="attachments-section-title">
+                <Paperclip size={16} />
+                <h3>Anexos</h3>
+              </div>
+
+              {/* Tabela de Anexos */}
+              <div className="attachments-table-container">
+                {attachmentsLoading ? (
+                  <div className="attachments-loading">
+                    <Loader2 className="animate-spin" size={16} />
+                    <span>Carregando anexos...</span>
+                  </div>
+                ) : attachments.length === 0 ? (
+                  <div className="attachments-empty">
+                    Nenhum anexo adicionado a esta tarefa.
+                  </div>
+                ) : (
+                  <table className="attachments-table">
+                    <thead>
+                      <tr>
+                        <th>Nome</th>
+                        <th>Tipo</th>
+                        <th style={{ textAlign: 'right' }}>Ações</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {attachments.map(att => {
+                        const isEditing = editingAttachmentId === att.id;
+                        return (
+                          <tr key={att.id}>
+                            <td>
+                              {isEditing ? (
+                                <div className="table-edit-inputs">
+                                  <input
+                                    type="text"
+                                    className="premium-input table-edit-input"
+                                    value={editForm.name}
+                                    onChange={e => setEditForm({ ...editForm, name: e.target.value })}
+                                    onKeyDown={e => {
+                                      if (e.key === 'Enter') {
+                                        e.preventDefault();
+                                        handleSaveEdit(att.id, att.type);
+                                      }
+                                    }}
+                                    placeholder="Nome do Anexo"
+                                  />
+                                  {att.type === 'link' && (
+                                    <input
+                                      type="text"
+                                      className="premium-input table-edit-input link-edit-input"
+                                      value={editForm.url}
+                                      onChange={e => setEditForm({ ...editForm, url: e.target.value })}
+                                      onKeyDown={e => {
+                                        if (e.key === 'Enter') {
+                                          e.preventDefault();
+                                          handleSaveEdit(att.id, att.type);
+                                        }
+                                      }}
+                                      placeholder="https://link.com"
+                                    />
+                                  )}
+                                </div>
+                              ) : (
+                                <a 
+                                  href={getAttachmentUrl(att.url)}
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                  className="attachment-link"
+                                >
+                                  {att.name}
+                                </a>
+                              )}
+                            </td>
+                            <td>
+                              <span className={`attachment-badge ${att.type}`}>
+                                {att.type === 'file' ? (
+                                  <>
+                                    <FileText size={12} />
+                                    <span>Arquivo</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Link size={12} />
+                                    <span>Link</span>
+                                  </>
+                                )}
+                              </span>
+                            </td>
+                            <td style={{ textAlign: 'right' }}>
+                              <div className="attachment-row-actions">
+                                {isEditing ? (
+                                  <>
+                                    <button
+                                      type="button"
+                                      className="action-btn save-btn"
+                                      onClick={() => handleSaveEdit(att.id, att.type)}
+                                      title="Salvar"
+                                    >
+                                      <Check size={14} />
+                                    </button>
+                                    <button
+                                      type="button"
+                                      className="action-btn cancel-btn-icon"
+                                      onClick={handleCancelEdit}
+                                      title="Cancelar"
+                                    >
+                                      <X size={14} />
+                                    </button>
+                                  </>
+                                ) : (
+                                  <>
+                                    <button
+                                      type="button"
+                                      className="action-btn edit-btn"
+                                      onClick={() => handleStartEdit(att)}
+                                      title="Editar"
+                                    >
+                                      <Edit2 size={14} />
+                                    </button>
+                                    <button
+                                      type="button"
+                                      className="action-btn delete-btn"
+                                      onClick={() => handleDeleteAttachment(att.id)}
+                                      title="Excluir"
+                                    >
+                                      <Trash2 size={14} />
+                                    </button>
+                                  </>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+
+              {/* Box para Adicionar Novo Anexo */}
+              <div className="add-attachment-container">
+                <h4>Novo Anexo</h4>
+                <div className="add-attachment-fields">
+                  <div className="form-group">
+                    <label>Nome do Anexo</label>
+                    <input 
+                      type="text" 
+                      placeholder="Ex: Contrato assinado, Briefing..."
+                      className="premium-input"
+                      value={attachmentForm.name}
+                      onChange={e => setAttachmentForm({ ...attachmentForm, name: e.target.value })}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleAddAttachment(e);
+                        }
+                      }}
+                    />
+                  </div>
+
+                  <div className="form-row mini-row">
+                    <div className="form-group">
+                      <label>Tipo de Anexo</label>
+                      <select 
+                        className="premium-select"
+                        value={attachmentForm.type}
+                        onChange={e => setAttachmentForm({ ...attachmentForm, type: e.target.value })}
+                      >
+                        <option value="file">Arquivo (Upload)</option>
+                        <option value="link">Link (Web URL)</option>
+                      </select>
+                    </div>
+
+                    {attachmentForm.type === 'file' ? (
+                      <div className="form-group">
+                        <label>Arquivo</label>
+                        <input 
+                          type="file" 
+                          ref={fileInputRef}
+                          className="premium-input file-upload-input"
+                          onChange={e => setSelectedFile(e.target.files?.[0] || null)}
+                        />
+                      </div>
+                    ) : (
+                      <div className="form-group">
+                        <label>URL / Link</label>
+                        <input 
+                          type="text" 
+                          placeholder="https://exemplo.com"
+                          className="premium-input"
+                          value={attachmentForm.url}
+                          onChange={e => setAttachmentForm({ ...attachmentForm, url: e.target.value })}
+                          onKeyDown={e => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              handleAddAttachment(e);
+                            }
+                          }}
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  <button 
+                    type="button" 
+                    className="add-attachment-submit-btn"
+                    onClick={handleAddAttachment}
+                    disabled={uploadingAttachment}
+                  >
+                    {uploadingAttachment ? (
+                      <>
+                        <Loader2 className="animate-spin" size={14} />
+                        <span>Enviando...</span>
+                      </>
+                    ) : (
+                      'Adicionar Anexo'
+                    )}
+                  </button>
+                </div>
               </div>
             </div>
 

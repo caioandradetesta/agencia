@@ -1123,3 +1123,244 @@
   font-size: 13px;
   font-weight: 600;
 }
+
+/* Seção de Anexos */
+.premium-divider {
+  border: 0;
+  height: 1px;
+  background-color: var(--border-color);
+  margin: 10px 0;
+}
+
+.attachments-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 10px;
+}
+
+.attachments-section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-primary);
+}
+
+.attachments-section-title h3 {
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.attachments-table-container {
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  background-color: var(--bg-primary);
+  overflow: hidden;
+}
+
+.attachments-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 24px;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.attachments-empty {
+  text-align: center;
+  padding: 24px;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-style: italic;
+}
+
+.attachments-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.attachments-table th {
+  background-color: var(--bg-tertiary);
+  padding: 10px 14px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.attachments-table td {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-primary);
+  vertical-align: middle;
+}
+
+.attachments-table tr:last-child td {
+  border-bottom: 0;
+}
+
+.attachment-link {
+  color: var(--accent-primary);
+  text-decoration: none;
+  font-weight: 600;
+  transition: all 0.2s;
+  word-break: break-all;
+}
+
+.attachment-link:hover {
+  text-decoration: underline;
+  filter: brightness(1.1);
+}
+
+.attachment-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.attachment-badge.file {
+  background-color: var(--status-doing-soft);
+  color: var(--status-doing);
+}
+
+.attachment-badge.link {
+  background-color: var(--status-review-soft);
+  color: var(--status-review);
+}
+
+.attachment-row-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.attachment-row-actions .action-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--bg-tertiary);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.attachment-row-actions .action-btn:hover {
+  color: var(--text-primary);
+  background-color: var(--border-color);
+}
+
+.attachment-row-actions .action-btn.delete-btn:hover {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: #EF4444;
+  border-color: rgba(239, 68, 68, 0.2);
+}
+
+.attachment-row-actions .action-btn.edit-btn:hover {
+  background-color: var(--accent-soft);
+  color: var(--accent-primary);
+  border-color: rgba(99, 102, 241, 0.2);
+}
+
+.attachment-row-actions .action-btn.save-btn {
+  background-color: #10B981;
+  color: white;
+  border-color: #10B981;
+}
+
+.attachment-row-actions .action-btn.save-btn:hover {
+  background-color: #059669;
+  border-color: #059669;
+}
+
+.table-edit-inputs {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+
+.table-edit-input {
+  padding: 6px 10px !important;
+  font-size: 13px !important;
+  background-color: var(--bg-secondary) !important;
+}
+
+.link-edit-input {
+  font-size: 11px !important;
+  color: var(--text-secondary) !important;
+}
+
+/* Box Adicionar Anexo */
+.add-attachment-container {
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 16px;
+  margin-top: 10px;
+}
+
+.add-attachment-container h4 {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 12px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.add-attachment-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.mini-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.file-upload-input {
+  padding: 8px 10px !important;
+  font-size: 12px !important;
+}
+
+.add-attachment-submit-btn {
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  background-color: var(--accent-primary);
+  color: white;
+  font-weight: 600;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.2s;
+  cursor: pointer;
+  border: none;
+}
+
+.add-attachment-submit-btn:hover:not(:disabled) {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+
+.add-attachment-submit-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
