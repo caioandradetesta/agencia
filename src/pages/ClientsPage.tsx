@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { 
   Plus, 
   Building2, 
@@ -11,7 +12,8 @@ import {
   Trash2,
   Edit3,
   User,
-  Briefcase
+  Briefcase,
+  FolderOpen
 } from 'lucide-react';
 import { useClients } from '../hooks/useClients';
 import { AddClientModal } from '../components/AddClientModal';
@@ -95,7 +97,9 @@ export const ClientsPage: React.FC = () => {
                 </div>
                 
                 <div className="card-body">
-                  <h3>{client.company}</h3>
+                  <Link to={`/clients/${client.id}`} target="_blank" className="client-title-link" title="Acessar Repositório">
+                    <h3>{client.company}</h3>
+                  </Link>
                   <div className="responsible-box">
                     <User size={14} />
                     <span>Responsável: <strong>{client.name}</strong></span>
@@ -121,7 +125,12 @@ export const ClientsPage: React.FC = () => {
                 </div>
                 
                 <div className="card-actions">
-                  <button className="view-profile">Ver Projetos <ExternalLink size={14} /></button>
+                  <Link to={`/clients/${client.id}`} target="_blank" className="view-repository-btn">
+                    Repositório <FolderOpen size={14} />
+                  </Link>
+                  <button className="view-profile">
+                    Projetos <ExternalLink size={14} />
+                  </button>
                 </div>
               </div>
             ))}

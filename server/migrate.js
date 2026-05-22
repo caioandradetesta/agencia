@@ -96,6 +96,29 @@ async function migrate() {
       );
     `, 'Tabela task_history (V9)');
 
+    // Repositório de arquivos do cliente (V10)
+    await runQuery(`
+      CREATE TABLE IF NOT EXISTS client_files (
+        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+        client_id UUID NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+        name TEXT NOT NULL,
+        description TEXT,
+        file_url TEXT NOT NULL,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+      );
+    `, 'Tabela client_files (V10)');
+
+    // Notas de clientes (V10)
+    await runQuery(`
+      CREATE TABLE IF NOT EXISTS client_notes (
+        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+        client_id UUID NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+        name TEXT NOT NULL,
+        content TEXT NOT NULL,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+      );
+    `, 'Tabela client_notes (V10)');
+
     console.log('✅ Migração V6 finalizada!');
   } catch (err) {
     console.error('❌ ERRO NO PROCESSO DE MIGRAÇÃO:', err);

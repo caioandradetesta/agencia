@@ -184,27 +184,64 @@
 }
 
 
-.card-actions {
-  margin-top: auto;
+.client-title-link {
+  text-decoration: none;
+  color: inherit;
+  display: inline-block;
+  transition: color 0.2s ease;
 }
 
-.view-profile {
-  width: 100%;
-  padding: 12px;
+.client-title-link:hover h3 {
+  color: var(--accent-primary);
+}
+
+.card-actions {
+  margin-top: auto;
+  display: flex;
+  gap: 10px;
+}
+
+.view-repository-btn {
+  flex: 1;
+  padding: 10px 14px;
   border-radius: 12px;
-  background-color: var(--bg-tertiary);
-  color: var(--text-primary);
+  background-color: var(--accent-primary);
+  color: white;
   font-weight: 600;
+  font-size: 13.5px;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  transition: all 0.2s;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(99, 102, 241, 0.15);
+}
+
+.view-repository-btn:hover {
+  background-color: var(--accent-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(99, 102, 241, 0.25);
+}
+
+.view-profile {
+  flex: 1;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+  font-weight: 600;
+  font-size: 13.5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+  border: 1px solid var(--border-color);
 }
 
 .view-profile:hover {
-  background-color: var(--accent-primary);
-  color: white;
+  background-color: var(--border-color);
+  transform: translateY(-1px);
 }
 
 .new-client-card {

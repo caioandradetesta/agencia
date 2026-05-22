@@ -76,6 +76,116 @@ router.delete('/clients/:id', async (req, res) => {
   }
 });
 
+// Obter detalhes de um único cliente
+router.get('/clients/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { rows } = await db.query('SELECT * FROM clients WHERE id = $1', [id]);
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Cliente não encontrado.' });
+    }
+    res.json(rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// --- ARQUIVOS DO CLIENTE ---
+
+// Listar arquivos do cliente
+router.get('/clients/:clientId/files', async (req, res) => {
+  try {
+    const { clientId } = req.params;
+    const { rows } = await db.query(
+      'SELECT * FROM client_files WHERE client_id = $1 ORDER BY created_at DESC',
+      [clientId]
+    );
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Adicionar arquivo para o cliente
+router.post('/clients/:clientId/files', async (req, res) => {
+  try {
+    const { clientId } = req.params;
+    const { name, description, file_url } = req.body;
+    if (!name || !file_url) {
+      return res.status(400).json({ error: 'Os campos Nome e Arquivo são obrigatórios.' });
+    }
+    const { rows } = await db.query(
+      'INSERT INTO client_files (client_id, name, description, file_url) VALUES ($1, $2, $3, $4) RETURNING *',
+      [clientId, name, description || '', file_url]
+    );
+    res.json(rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Excluir arquivo de cliente
+router.delete('/clients/files/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { rows } = await db.query('DELETE FROM client_files WHERE id = $1 RETURNING *', [id]);
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Arquivo não encontrado.' });
+    }
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// --- NOTAS DO CLIENTE ---
+
+// Listar notas do cliente
+router.get('/clients/:clientId/notes', async (req, res) => {
+  try {
+    const { clientId } = req.params;
+    const { rows } = await db.query(
+      'SELECT * FROM client_notes WHERE client_id = $1 ORDER BY created_at DESC',
+      [clientId]
+    );
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Adicionar nota para o cliente
+router.post('/clients/:clientId/notes', async (req, res) => {
+  try {
+    const { clientId } = req.params;
+    const { name, content } = req.body;
+    if (!name || !content) {
+      return res.status(400).json({ error: 'Os campos Nome e Texto são obrigatórios.' });
+    }
+    const { rows } = await db.query(
+      'INSERT INTO client_notes (client_id, name, content) VALUES ($1, $2, $3) RETURNING *',
+      [clientId, name, content]
+    );
+    res.json(rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Excluir nota de cliente
+router.delete('/clients/notes/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { rows } = await db.query('DELETE FROM client_notes WHERE id = $1 RETURNING *', [id]);
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Nota não encontrada.' });
+    }
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // --- PROJETOS ---
 
 router.get('/projects', async (req, res) => {
