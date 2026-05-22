@@ -15,14 +15,15 @@ import {
   Briefcase,
   FolderOpen
 } from 'lucide-react';
-import { useClients } from '../hooks/useClients';
+import { useClients, type Client } from '../hooks/useClients';
 import { AddClientModal } from '../components/AddClientModal';
-import { api } from '../lib/api';
+import { api, getFullUrl } from '../lib/api';
 import './ClientsPage.css';
 
 export const ClientsPage: React.FC = () => {
   const { clients, loading, error, refresh } = useClients();
   const [showModal, setShowModal] = useState(false);
+  const [editingClient, setEditingClient] = useState<Client | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
 
   const handleDeleteClient = async (id: string, name: string) => {
@@ -82,10 +83,16 @@ export const ClientsPage: React.FC = () => {
               <div key={client.id} className="client-card">
                 <div className="card-header">
                   <div className="client-logo">
-                    {client.logo_url ? <img src={client.logo_url} alt="" /> : <Building2 size={24} />}
+                    {client.logo_url ? <img src={getFullUrl(client.logo_url)} alt="" /> : <Building2 size={24} />}
                   </div>
                   <div className="card-header-actions">
-                    <button className="icon-btn edit" title="Editar"><Edit3 size={16} /></button>
+                    <button 
+                      className="icon-btn edit" 
+                      title="Editar"
+                      onClick={() => setEditingClient(client)}
+                    >
+                      <Edit3 size={16} />
+                    </button>
                     <button 
                       className="icon-btn delete" 
                       title="Excluir"
@@ -143,9 +150,13 @@ export const ClientsPage: React.FC = () => {
         )}
       </div>
 
-      {showModal && (
+      {(showModal || editingClient) && (
         <AddClientModal 
-          onClose={() => setShowModal(false)} 
+          client={editingClient || undefined}
+          onClose={() => {
+            setShowModal(false);
+            setEditingClient(null);
+          }} 
           onSuccess={refresh}
         />
       )}

@@ -1,30 +1,62 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Loader2, User, Mail, Building2, Phone, Link } from 'lucide-react';
-import { api } from '../lib/api';
+import { X, Loader2, User, Mail, Building2, Phone, Upload } from 'lucide-react';
+import { api, getFullUrl } from '../lib/api';
+import type { Client } from '../hooks/useClients';
 import './Modal.css';
 
 interface AddClientModalProps {
   onClose: () => void;
   onSuccess: () => void;
+  client?: Client;
 }
 
-export const AddClientModal: React.FC<AddClientModalProps> = ({ onClose, onSuccess }) => {
+export const AddClientModal: React.FC<AddClientModalProps> = ({ onClose, onSuccess, client }) => {
   const [loading, setLoading] = useState(false);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    company: '',
-    phone: '',
-    logo_url: ''
+    name: client?.name || '',
+    email: client?.email || '',
+    company: client?.company || '',
+    phone: client?.phone || '',
+    logo_url: client?.logo_url || ''
   });
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      const formDataUpload = new FormData();
+      formDataUpload.append('file', file);
+      
+      try {
+        setUploadingLogo(true);
+        const res = await api.post('/api/upload?type=logos', formDataUpload, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        });
+        setFormData(prev => ({ ...prev, logo_url: res.data.url }));
+      } catch (err: any) {
+        console.error(err);
+        alert('Erro ao enviar logo: ' + (err.response?.data?.error || err.message));
+      } finally {
+        setUploadingLogo(false);
+      }
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      await api.post('/api/clients', formData);
+      if (client) {
+        await api.patch(`/api/clients/${client.id}`, formData);
+      } else {
+        await api.post('/api/clients', formData);
+      }
       onSuccess();
       onClose();
     } catch (err: any) {
@@ -38,11 +70,42 @@ export const AddClientModal: React.FC<AddClientModalProps> = ({ onClose, onSucce
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content animate-fade-in" onClick={e => e.stopPropagation()}>
         <div className="modal-header">
-          <h2>Novo Cliente</h2>
+          <h2>{client ? 'Editar Cliente' : 'Novo Cliente'}</h2>
           <button className="close-btn" onClick={onClose}><X size={20} /></button>
         </div>
 
         <form onSubmit={handleSubmit} className="modal-form">
+          {/* Logo Upload Section */}
+          <div className="logo-upload-section">
+            <div className="logo-preview">
+              {formData.logo_url ? (
+                <img src={getFullUrl(formData.logo_url)} alt="Logo Preview" />
+              ) : (
+                <Building2 size={32} />
+              )}
+            </div>
+            <label className="upload-label">
+              {uploadingLogo ? (
+                <>
+                  <Loader2 className="animate-spin" size={14} />
+                  <span>Enviando...</span>
+                </>
+              ) : (
+                <>
+                  <Upload size={14} />
+                  <span>{formData.logo_url ? 'Alterar Logo' : 'Enviar Logo'}</span>
+                </>
+              )}
+              <input 
+                type="file" 
+                ref={fileInputRef}
+                onChange={handleLogoUpload}
+                accept="image/*"
+                style={{ display: 'none' }}
+              />
+            </label>
+          </div>
+
           <div className="form-group">
             <label><Building2 size={16} /> Nome da Empresa / Marca</label>
             <input 
@@ -86,20 +149,14 @@ export const AddClientModal: React.FC<AddClientModalProps> = ({ onClose, onSucce
             />
           </div>
 
-          <div className="form-group">
-            <label><Link size={16} /> URL do Logo</label>
-            <input 
-              type="url" 
-              placeholder="https://exemplo.com/logo.png"
-              value={formData.logo_url}
-              onChange={e => setFormData({ ...formData, logo_url: e.target.value })}
-            />
-          </div>
-
           <div className="modal-actions">
             <button type="button" className="cancel-btn" onClick={onClose}>Cancelar</button>
-            <button type="submit" className="submit-btn" disabled={loading}>
-              {loading ? <Loader2 className="animate-spin" size={18} /> : 'Cadastrar Cliente'}
+            <button type="submit" className="submit-btn" disabled={loading || uploadingLogo}>
+              {loading ? (
+                <Loader2 className="animate-spin" size={18} />
+              ) : (
+                client ? 'Salvar Alterações' : 'Cadastrar Cliente'
+              )}
             </button>
           </div>
         </form>

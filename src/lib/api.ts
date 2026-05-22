@@ -18,3 +18,16 @@ api.interceptors.request.use((config) => {
   }
   return config;
 });
+
+// Auxiliar para obter a URL completa de arquivos/logos armazenados no backend
+export const getFullUrl = (url?: string) => {
+  if (!url) return '';
+  if (url.startsWith('http') || url.startsWith('data:')) return url;
+  
+  const base = api.defaults.baseURL || '';
+  const absoluteBase = base 
+    ? (base.startsWith('http') ? base : `${window.location.origin}${base}`)
+    : window.location.origin;
+    
+  return `${absoluteBase}${url.startsWith('/') ? '' : '/'}${url}`;
+};

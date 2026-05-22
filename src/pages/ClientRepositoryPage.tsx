@@ -18,7 +18,7 @@ import {
   Notebook,
   Lock
 } from 'lucide-react';
-import { api } from '../lib/api';
+import { api, getFullUrl } from '../lib/api';
 import './ClientRepositoryPage.css';
 
 interface Client {
@@ -252,12 +252,7 @@ export const ClientRepositoryPage: React.FC = () => {
     });
   };
 
-  const getFullFileUrl = (url: string) => {
-    if (url.startsWith('http')) return url;
-    // Base URL is http://localhost:3000 in dev or empty in prod
-    const baseUrl = import.meta.env.PROD ? '' : 'http://localhost:3000';
-    return `${baseUrl}${url}`;
-  };
+
 
   if (loading) {
     return (
@@ -302,7 +297,7 @@ export const ClientRepositoryPage: React.FC = () => {
         <div className="client-info-main">
           <div className="client-logo-large">
             {client.logo_url ? (
-              <img src={client.logo_url} alt={client.company} />
+              <img src={getFullUrl(client.logo_url)} alt={client.company} />
             ) : (
               <Building2 size={36} />
             )}
@@ -443,13 +438,13 @@ export const ClientRepositoryPage: React.FC = () => {
                     <div 
                       key={file.id} 
                       className="file-item-card clickable"
-                      onClick={() => window.open(getFullFileUrl(file.file_url), '_blank')}
+                      onClick={() => window.open(getFullUrl(file.file_url), '_blank')}
                       title="Clique para abrir o arquivo em uma nova janela"
                     >
                       <div className="file-item-icon">
                         {isImage(file.file_url) ? (
                           <img 
-                            src={getFullFileUrl(file.file_url)} 
+                            src={getFullUrl(file.file_url)} 
                             alt={file.name} 
                             className="file-image-preview" 
                           />
