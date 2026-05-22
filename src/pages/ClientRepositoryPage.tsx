@@ -4,7 +4,6 @@ import {
   ArrowLeft, 
   Upload, 
   Trash2, 
-  Download, 
   FileText, 
   Plus, 
   File, 
@@ -16,7 +15,8 @@ import {
   FileImage, 
   FileArchive, 
   FolderOpen,
-  Notebook
+  Notebook,
+  Lock
 } from 'lucide-react';
 import { api } from '../lib/api';
 import './ClientRepositoryPage.css';
@@ -70,8 +70,16 @@ export const ClientRepositoryPage: React.FC = () => {
   const [noteContent, setNoteContent] = useState('');
   const [savingNote, setSavingNote] = useState(false);
   
+  // Secure Note Modal State
+  const [selectedNote, setSelectedNote] = useState<ClientNote | null>(null);
+  
   // Refs
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const isImage = (url: string) => {
+    const ext = url.split('.').pop()?.toLowerCase();
+    return ext ? ['jpg', 'jpeg', 'png', 'gif', 'svg', 'webp'].includes(ext) : false;
+  };
 
   const fetchData = async () => {
     try {
@@ -432,9 +440,22 @@ export const ClientRepositoryPage: React.FC = () => {
               ) : (
                 <div className="files-grid">
                   {files.map(file => (
-                    <div key={file.id} className="file-item-card">
+                    <div 
+                      key={file.id} 
+                      className="file-item-card clickable"
+                      onClick={() => window.open(getFullFileUrl(file.file_url), '_blank')}
+                      title="Clique para abrir o arquivo em uma nova janela"
+                    >
                       <div className="file-item-icon">
-                        {getFileIcon(file.file_url)}
+                        {isImage(file.file_url) ? (
+                          <img 
+                            src={getFullFileUrl(file.file_url)} 
+                            alt={file.name} 
+                            className="file-image-preview" 
+                          />
+                        ) : (
+                          getFileIcon(file.file_url)
+                        )}
                       </div>
                       
                       <div className="file-item-info">
@@ -443,16 +464,7 @@ export const ClientRepositoryPage: React.FC = () => {
                         <span className="file-date">{formatDate(file.created_at)}</span>
                       </div>
 
-                      <div className="file-item-actions">
-                        <a 
-                          href={getFullFileUrl(file.file_url)} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="file-action-btn download"
-                          title="Visualizar / Baixar"
-                        >
-                          <Download size={16} />
-                        </a>
+                      <div className="file-item-actions" onClick={e => e.stopPropagation()}>
                         <button 
                           onClick={() => handleFileDelete(file.id, file.name)}
                           className="file-action-btn delete"
@@ -532,11 +544,19 @@ export const ClientRepositoryPage: React.FC = () => {
               ) : (
                 <div className="notes-grid">
                   {notes.map(note => (
-                    <div key={note.id} className="note-item-card">
+                    <div 
+                      key={note.id} 
+                      className="note-item-card clickable"
+                      onClick={() => setSelectedNote(note)}
+                      title="Clique para visualizar a nota completa"
+                    >
                       <div className="note-card-header">
                         <h4>{note.name}</h4>
                         <button 
-                          onClick={() => handleNoteDelete(note.id, note.name)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleNoteDelete(note.id, note.name);
+                          }}
                           className="note-delete-btn"
                           title="Excluir Nota"
                         >
@@ -544,7 +564,10 @@ export const ClientRepositoryPage: React.FC = () => {
                         </button>
                       </div>
                       <div className="note-card-body">
-                        <p>{note.content}</p>
+                        <div className="note-card-secure-badge">
+                          <Lock size={12} />
+                          <span>Conteúdo Protegido</span>
+                        </div>
                       </div>
                       <div className="note-card-footer">
                         <span>{formatDate(note.created_at)}</span>
@@ -557,6 +580,28 @@ export const ClientRepositoryPage: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Secure Note Modal */}
+      {selectedNote && (
+        <div className="repo-modal-overlay" onClick={() => setSelectedNote(null)}>
+          <div className="repo-modal-content animate-fade-in" onClick={e => e.stopPropagation()}>
+            <div className="repo-modal-header">
+              <div className="repo-modal-title">
+                <Notebook size={20} className="modal-title-icon" />
+                <h3>{selectedNote.name}</h3>
+              </div>
+              <button className="repo-modal-close-btn" onClick={() => setSelectedNote(null)}>×</button>
+            </div>
+            <div className="repo-modal-body">
+              <p className="note-modal-text">{selectedNote.content}</p>
+            </div>
+            <div className="repo-modal-footer">
+              <span className="note-modal-date">Criada em: {formatDate(selectedNote.created_at)}</span>
+              <button className="repo-modal-btn-close" onClick={() => setSelectedNote(null)}>Fechar</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
