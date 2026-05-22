@@ -5,14 +5,29 @@ import { useUsers } from '../hooks/useUsers';
 
 interface TaskStatsProps {
   tasks: Task[];
+  isFiltered?: boolean;
 }
 
-export const TaskStats: React.FC<TaskStatsProps> = ({ tasks }) => {
+export const TaskStats: React.FC<TaskStatsProps> = ({ tasks, isFiltered = false }) => {
   const { users } = useUsers();
 
   const activeTasks = tasks.filter(t => t.status !== 'done' && t.status !== 'publicado').length;
   const completedTasks = tasks.filter(t => t.status === 'done' || t.status === 'publicado').length;
-  const totalTeam = users.length;
+  
+  // Calculate unique assignees from the filtered tasks
+  const uniqueAssignees = new Set<string>();
+  tasks.forEach(task => {
+    task.assignees?.forEach((a: any) => {
+      if (a.user_id) {
+        uniqueAssignees.add(a.user_id);
+      }
+    });
+    if (task.assigned_to) {
+      uniqueAssignees.add(task.assigned_to);
+    }
+  });
+
+  const totalTeam = isFiltered ? uniqueAssignees.size : users.length;
   const highPriorityTasks = tasks.filter(t => t.priority === 'high' && t.status !== 'done' && t.status !== 'publicado').length;
 
   return (

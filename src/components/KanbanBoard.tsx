@@ -78,6 +78,8 @@ export const KanbanBoard: React.FC = () => {
     updateTaskStatus(taskId, newStatus);
   };
 
+  const isFiltered = Boolean(searchTerm || filterPriority || filterProject || filterResponsible);
+
   const filteredTasks = tasks.filter(t => {
     const matchesSearch = t.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       t.project_name?.toLowerCase().includes(searchTerm.toLowerCase());
@@ -171,7 +173,7 @@ export const KanbanBoard: React.FC = () => {
         </div>
       </div>
 
-      <TaskStats tasks={filteredTasks} />
+      <TaskStats tasks={filteredTasks} isFiltered={isFiltered} />
 
       {loading ? (
         <div className="loading-state">
