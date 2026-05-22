@@ -3,9 +3,9 @@ import { createPortal } from 'react-dom';
 import { 
     X, Loader2, Type, AlignLeft, Flag, Calendar, 
   Users as UsersIcon, Send, MessageSquare, Layout, RefreshCcw, Trash2, Briefcase,
-  Paperclip, Link, FileText, Check, Edit2, History
+  Paperclip, Link, FileText, Check, Edit2, History, Maximize2
 } from 'lucide-react';
-import { api } from '../lib/api';
+import { api, getFullUrl } from '../lib/api';
 import { useUsers } from '../hooks/useUsers';
 import { useProjects } from '../hooks/useProjects';
 import { handleImagePaste, insertAtCursor } from '../utils/imagePaste';
@@ -81,6 +81,7 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, onClose,
   });
 
   const [folders, setFolders] = useState<any[]>([]);
+  const [isDescExpanded, setIsDescExpanded] = useState(false);
 
   useEffect(() => {
     if (formData.project_id) {
@@ -262,12 +263,7 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, onClose,
     }
   };
 
-  const getAttachmentUrl = (url: string) => {
-    if (!url) return '#';
-    if (url.startsWith('http://') || url.startsWith('https://')) return url;
-    const API_URL = import.meta.env.PROD ? '' : 'http://localhost:3000';
-    return `${API_URL}${url}`;
-  };
+
 
   useEffect(() => {
     scrollToBottom();
@@ -544,7 +540,17 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, onClose,
             </div>
 
             <div className="form-group">
-              <label><AlignLeft size={16} /> Descrição Detalhada</label>
+              <div className="description-label-row">
+                <label style={{ margin: 0 }}><AlignLeft size={16} /> Descrição Detalhada</label>
+                <button 
+                  type="button" 
+                  className="expand-desc-btn" 
+                  onClick={() => setIsDescExpanded(true)}
+                  title="Expandir descrição"
+                >
+                  <Maximize2 size={14} />
+                </button>
+              </div>
               <textarea 
                 rows={4}
                 className="premium-textarea"
@@ -658,10 +664,11 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, onClose,
                                 </div>
                               ) : (
                                 <a 
-                                  href={getAttachmentUrl(att.url)}
+                                  href={getFullUrl(att.url)}
                                   target="_blank" 
                                   rel="noopener noreferrer"
                                   className="attachment-link"
+                                  onClick={(e) => e.stopPropagation()}
                                 >
                                   {att.name}
                                 </a>
@@ -945,6 +952,43 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, onClose,
           </div>
         </div>
       </div>
+
+      {isDescExpanded && (
+        <div className="desc-modal-overlay" onClick={() => setIsDescExpanded(false)}>
+          <div className="desc-modal-content animate-fade-in" onClick={e => e.stopPropagation()}>
+            <div className="desc-modal-header">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 600, color: 'var(--text-primary)' }}>Descrição Detalhada</h3>
+                <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{formData.title}</span>
+              </div>
+              <button className="close-btn" type="button" onClick={() => setIsDescExpanded(false)}><X size={20} /></button>
+            </div>
+            <div className="desc-modal-body">
+              <textarea 
+                className="desc-textarea-large"
+                value={formData.description}
+                onChange={e => setFormData({ ...formData, description: e.target.value })}
+                onPaste={handleDescriptionPaste}
+                placeholder="Descreva o que precisa ser feito..."
+                autoFocus
+              />
+              <span className="desc-modal-tip">
+                Dica: Você pode colar imagens diretamente no campo de texto (Ctrl+V)
+              </span>
+            </div>
+            <div className="desc-modal-footer">
+              <button 
+                type="button" 
+                className="premium-btn-header save" 
+                onClick={() => setIsDescExpanded(false)}
+              >
+                <Check size={16} />
+                <span>Confirmar</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>,
     document.body
   );
