@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   Plus, 
   Search, 
@@ -17,6 +18,7 @@ import { EditProjectModal } from '../components/EditProjectModal';
 import './ProjectsPage.css';
 
 export const ProjectsPage: React.FC = () => {
+  const navigate = useNavigate();
   const [projects, setProjects] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -131,7 +133,7 @@ export const ProjectsPage: React.FC = () => {
                       <Calendar size={14} />
                       <span>Criado em {new Date(project.created_at).toLocaleDateString('pt-BR')}</span>
                     </div>
-                    <button className="open-wiki-btn">
+                    <button className="open-wiki-btn" onClick={() => navigate(`/projects/${project.id}`)}>
                       Ver Detalhes
                       <ExternalLink size={14} />
                     </button>

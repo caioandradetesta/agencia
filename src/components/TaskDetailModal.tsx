@@ -71,6 +71,7 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, onClose,
     title: task.title || '',
     description: task.description || '',
     project_id: task.project_id || '',
+    project_folder_id: task.project_folder_id || '',
     status: task.status || 'todo',
     priority: task.priority || 'medium',
     due_date: task.due_date ? new Date(task.due_date).toISOString().split('T')[0] : '',
@@ -78,6 +79,31 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, onClose,
     workflow_tag: task.workflow_tag || '',
     recurrence: task.recurrence || ''
   });
+
+  const [folders, setFolders] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (formData.project_id) {
+      api.get(`/api/projects/${formData.project_id}/folders`)
+        .then(res => {
+          setFolders(res.data);
+        })
+        .catch(err => {
+          console.error('Erro ao buscar pastas do projeto:', err);
+          setFolders([]);
+        });
+    } else {
+      setFolders([]);
+    }
+  }, [formData.project_id]);
+
+  const prevProjectIdRef = useRef(formData.project_id);
+  useEffect(() => {
+    if (prevProjectIdRef.current !== formData.project_id) {
+      setFormData(prev => ({ ...prev, project_folder_id: '' }));
+      prevProjectIdRef.current = formData.project_id;
+    }
+  }, [formData.project_id]);
 
   // Estado para Menções
   const [mentionSearch, setMentionSearch] = useState('');
@@ -435,6 +461,22 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, onClose,
                 ))}
               </select>
             </div>
+
+            {formData.project_id && folders.length > 0 && (
+              <div className="form-group">
+                <label><Briefcase size={16} /> Pasta do Projeto</label>
+                <select
+                  value={formData.project_folder_id}
+                  onChange={e => setFormData({ ...formData, project_folder_id: e.target.value })}
+                  className="premium-select"
+                >
+                  <option value="">Nenhuma Pasta</option>
+                  {folders.map(folder => (
+                    <option key={folder.id} value={folder.id}>{folder.name}</option>
+                  ))}
+                </select>
+              </div>
+            )}
 
             <div className="form-group">
               <label><Layout size={16} /> Estágio Atual</label>

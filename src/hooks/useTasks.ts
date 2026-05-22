@@ -6,6 +6,8 @@ export interface Task {
   title: string;
   status: string;
   project_id: string;
+  project_folder_id?: string;
+  project_folder_name?: string;
   description?: string;
   priority?: 'low' | 'medium' | 'high';
   due_date?: string;

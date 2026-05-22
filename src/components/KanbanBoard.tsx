@@ -226,7 +226,10 @@ export const KanbanBoard: React.FC = () => {
                         {getPriorityLabel(task.priority)}
                       </span>
                       {task.project_name && (
-                        <span className="project-tag-card">{task.project_name}</span>
+                        <span className="project-tag-card">
+                          {task.project_name}
+                          {task.project_folder_name && ` / ${task.project_folder_name}`}
+                        </span>
                       )}
                     </div>
                     <h4>{task.title}</h4>
@@ -296,7 +299,12 @@ export const KanbanBoard: React.FC = () => {
                         <strong>{task.title}</strong>
                       </div>
                     </td>
-                    <td><span className="project-badge-mini">{task.project_name || 'Sem Projeto'}</span></td>
+                    <td>
+                      <span className="project-badge-mini">
+                        {task.project_name || 'Sem Projeto'}
+                        {task.project_folder_name && ` / ${task.project_folder_name}`}
+                      </span>
+                    </td>
                     <td>
                       <span className="status-badge-table" style={{ backgroundColor: (col?.color || '#ccc') + '20', color: col?.color || '#999' }}>
                         {col?.title || task.status}

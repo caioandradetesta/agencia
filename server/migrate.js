@@ -134,6 +134,45 @@ async function migrate() {
       ALTER TABLE client_files ADD COLUMN IF NOT EXISTS folder_id UUID REFERENCES client_folders(id) ON DELETE CASCADE;
     `, 'Coluna folder_id em client_files (V11)');
 
+    // Pastas de projetos (V12)
+    await runQuery(`
+      CREATE TABLE IF NOT EXISTS project_folders (
+        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+        project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+        name TEXT NOT NULL,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+      );
+    `, 'Tabela project_folders (V12)');
+
+    // Arquivos de projetos (V12)
+    await runQuery(`
+      CREATE TABLE IF NOT EXISTS project_files (
+        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+        project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+        name TEXT NOT NULL,
+        description TEXT,
+        file_url TEXT NOT NULL,
+        folder_id UUID REFERENCES project_folders(id) ON DELETE CASCADE,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+      );
+    `, 'Tabela project_files (V12)');
+
+    // Notas de projetos (V12)
+    await runQuery(`
+      CREATE TABLE IF NOT EXISTS project_notes (
+        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+        project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+        name TEXT NOT NULL,
+        content TEXT NOT NULL,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+      );
+    `, 'Tabela project_notes (V12)');
+
+    // Coluna project_folder_id em tasks (V12)
+    await runQuery(`
+      ALTER TABLE tasks ADD COLUMN IF NOT EXISTS project_folder_id UUID REFERENCES project_folders(id) ON DELETE SET NULL;
+    `, 'Coluna project_folder_id em tasks (V12)');
+
     console.log('✅ Migração V6 finalizada!');
   } catch (err) {
     console.error('❌ ERRO NO PROCESSO DE MIGRAÇÃO:', err);

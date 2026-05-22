@@ -138,6 +138,24 @@ router.delete('/clients/files/:id', async (req, res) => {
   }
 });
 
+// Atualizar arquivo de cliente (mover pasta)
+router.patch('/clients/files/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { folder_id } = req.body;
+    const { rows } = await db.query(
+      'UPDATE client_files SET folder_id = $1 WHERE id = $2 RETURNING *',
+      [folder_id || null, id]
+    );
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Arquivo não encontrado.' });
+    }
+    res.json(rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // --- PASTAS DO CLIENTE ---
 
 // Listar pastas do cliente
@@ -295,6 +313,190 @@ router.delete('/projects/:id', async (req, res) => {
   }
 });
 
+// --- GET SINGLE PROJECT DETAILS ---
+router.get('/projects/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { rows } = await db.query(`
+      SELECT p.*, c.company as client_name 
+      FROM projects p
+      LEFT JOIN clients c ON p.client_id = c.id
+      WHERE p.id = $1
+    `, [id]);
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Projeto não encontrado.' });
+    }
+    res.json(rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// --- ARQUIVOS DO PROJETO ---
+
+// Listar arquivos do projeto
+router.get('/projects/:projectId/files', async (req, res) => {
+  try {
+    const { projectId } = req.params;
+    const { rows } = await db.query(
+      'SELECT * FROM project_files WHERE project_id = $1 ORDER BY created_at DESC',
+      [projectId]
+    );
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Adicionar arquivo para o projeto
+router.post('/projects/:projectId/files', async (req, res) => {
+  try {
+    const { projectId } = req.params;
+    const { name, description, file_url, folder_id } = req.body;
+    if (!name || !file_url) {
+      return res.status(400).json({ error: 'Os campos Nome e Arquivo são obrigatórios.' });
+    }
+    const { rows } = await db.query(
+      'INSERT INTO project_files (project_id, name, description, file_url, folder_id) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+      [projectId, name, description || '', file_url, folder_id || null]
+    );
+    res.json(rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Excluir arquivo de projeto
+router.delete('/projects/files/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { rows } = await db.query('DELETE FROM project_files WHERE id = $1 RETURNING *', [id]);
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Arquivo não encontrado.' });
+    }
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Atualizar arquivo de projeto (mover pasta)
+router.patch('/projects/files/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { folder_id } = req.body;
+    const { rows } = await db.query(
+      'UPDATE project_files SET folder_id = $1 WHERE id = $2 RETURNING *',
+      [folder_id || null, id]
+    );
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Arquivo não encontrado.' });
+    }
+    res.json(rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// --- PASTAS DO PROJETO ---
+
+// Listar pastas do projeto
+router.get('/projects/:projectId/folders', async (req, res) => {
+  try {
+    const { projectId } = req.params;
+    const { rows } = await db.query(
+      'SELECT * FROM project_folders WHERE project_id = $1 ORDER BY name ASC',
+      [projectId]
+    );
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Criar pasta para o projeto
+router.post('/projects/:projectId/folders', async (req, res) => {
+  try {
+    const { projectId } = req.params;
+    const { name } = req.body;
+    if (!name) {
+      return res.status(400).json({ error: 'O nome da pasta é obrigatório.' });
+    }
+    const { rows } = await db.query(
+      'INSERT INTO project_folders (project_id, name) VALUES ($1, $2) RETURNING *',
+      [projectId, name]
+    );
+    res.json(rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Excluir pasta do projeto
+router.delete('/projects/folders/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { rows } = await db.query(
+      'DELETE FROM project_folders WHERE id = $1 RETURNING *',
+      [id]
+    );
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Pasta não encontrada.' });
+    }
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// --- NOTAS DO PROJETO ---
+
+// Listar notas do projeto
+router.get('/projects/:projectId/notes', async (req, res) => {
+  try {
+    const { projectId } = req.params;
+    const { rows } = await db.query(
+      'SELECT * FROM project_notes WHERE project_id = $1 ORDER BY created_at DESC',
+      [projectId]
+    );
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Adicionar nota para o projeto
+router.post('/projects/:projectId/notes', async (req, res) => {
+  try {
+    const { projectId } = req.params;
+    const { name, content } = req.body;
+    if (!name || !content) {
+      return res.status(400).json({ error: 'Os campos Nome e Texto são obrigatórios.' });
+    }
+    const { rows } = await db.query(
+      'INSERT INTO project_notes (project_id, name, content) VALUES ($1, $2, $3) RETURNING *',
+      [projectId, name, content]
+    );
+    res.json(rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Excluir nota de projeto
+router.delete('/projects/notes/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { rows } = await db.query('DELETE FROM project_notes WHERE id = $1 RETURNING *', [id]);
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Nota não encontrada.' });
+    }
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // --- COLUNAS KANBAN ---
 
 router.get('/kanban-columns', async (req, res) => {
@@ -364,6 +566,7 @@ router.get('/tasks', async (req, res) => {
       SELECT t.*, 
              pr.name as project_name,
              creator_prof.full_name as creator_name,
+             pf.name as project_folder_name,
              COALESCE(
                json_agg(
                  json_build_object(
@@ -377,10 +580,11 @@ router.get('/tasks', async (req, res) => {
              ) as assignees
       FROM tasks t
       LEFT JOIN projects pr ON t.project_id = pr.id
+      LEFT JOIN project_folders pf ON t.project_folder_id = pf.id
       LEFT JOIN task_assignments ta ON t.id = ta.task_id
       LEFT JOIN profiles p ON ta.user_id = p.user_id
       LEFT JOIN profiles creator_prof ON t.created_by = creator_prof.user_id
-      GROUP BY t.id, pr.name, creator_prof.full_name
+      GROUP BY t.id, pr.name, creator_prof.full_name, pf.name
       ORDER BY 
         CASE 
           WHEN t.priority = 'high' THEN 1 
@@ -399,14 +603,16 @@ router.get('/tasks', async (req, res) => {
 router.patch('/tasks/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { status, title, description, priority, due_date, assignee_ids, workflow_tag, recurrence } = req.body;
+    const { status, title, description, priority, due_date, assignee_ids, workflow_tag, recurrence, project_id, project_folder_id } = req.body;
+    const hasProjectId = req.body.hasOwnProperty('project_id');
+    const hasProjectFolderId = req.body.hasOwnProperty('project_folder_id');
     const userId = getCurrentUserId(req);
     
     await db.query('BEGIN');
 
     // Buscar estado atual completo para histórico
     const { rows: oldTaskRows } = await db.query(
-      'SELECT status, title, description, priority, due_date, recurrence FROM tasks WHERE id = $1',
+      'SELECT status, title, description, priority, due_date, recurrence, project_id, project_folder_id FROM tasks WHERE id = $1',
       [id]
     );
     if (oldTaskRows.length === 0) {
@@ -431,8 +637,10 @@ router.patch('/tasks/:id', async (req, res) => {
            priority = COALESCE($4, priority), 
            due_date = COALESCE($5, due_date),
            workflow_tag = COALESCE($6, workflow_tag),
-           recurrence = COALESCE($7, recurrence)
-       WHERE id = $8 RETURNING *`,
+           recurrence = COALESCE($7, recurrence),
+           project_id = CASE WHEN $8 = true THEN $9::uuid ELSE project_id END,
+           project_folder_id = CASE WHEN $10 = true THEN $11::uuid ELSE project_folder_id END
+       WHERE id = $12 RETURNING *`,
       [
         status || null, 
         title || null, 
@@ -440,7 +648,11 @@ router.patch('/tasks/:id', async (req, res) => {
         priority || null, 
         (due_date === '' || !due_date) ? null : due_date, 
         workflow_tag || null, 
-        recurrence || null, 
+        recurrence || null,
+        hasProjectId,
+        project_id || null,
+        hasProjectFolderId,
+        project_folder_id || null,
         id
       ]
     );
@@ -610,6 +822,7 @@ router.patch('/tasks/:id', async (req, res) => {
         t.*,
         p.name as project_name,
         creator_prof.full_name as creator_name,
+        pf.name as project_folder_name,
         json_agg(
           json_build_object(
             'user_id', pr.user_id,
@@ -619,11 +832,12 @@ router.patch('/tasks/:id', async (req, res) => {
         ) FILTER (WHERE pr.user_id IS NOT NULL) as assignees
       FROM tasks t
       LEFT JOIN projects p ON t.project_id = p.id
+      LEFT JOIN project_folders pf ON t.project_folder_id = pf.id
       LEFT JOIN task_assignments ta ON t.id = ta.task_id
       LEFT JOIN profiles pr ON ta.user_id = pr.user_id
       LEFT JOIN profiles creator_prof ON t.created_by = creator_prof.user_id
       WHERE t.id = $1
-      GROUP BY t.id, p.name, creator_prof.full_name
+      GROUP BY t.id, p.name, creator_prof.full_name, pf.name
     `, [id]);
 
     res.json(fullTask[0]);
@@ -858,14 +1072,14 @@ router.delete('/attachments/:id', async (req, res) => {
 
 router.post('/tasks', async (req, res) => {
   try {
-    const { project_id, title, status, description, priority, due_date, assignee_ids, recurrence } = req.body;
+    const { project_id, project_folder_id, title, status, description, priority, due_date, assignee_ids, recurrence } = req.body;
     const userId = getCurrentUserId(req);
     
     await db.query('BEGIN');
     
     const { rows } = await db.query(
-      'INSERT INTO tasks (project_id, title, status, description, priority, due_date, recurrence, created_by) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',
-      [project_id || null, title, status || 'todo', description || '', priority || 'medium', due_date || null, recurrence || null, userId]
+      'INSERT INTO tasks (project_id, project_folder_id, title, status, description, priority, due_date, recurrence, created_by) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *',
+      [project_id || null, project_folder_id || null, title, status || 'todo', description || '', priority || 'medium', due_date || null, recurrence || null, userId]
     );
     
     const task = rows[0];
@@ -886,7 +1100,36 @@ router.post('/tasks', async (req, res) => {
     );
     
     await db.query('COMMIT');
-    res.json(task);
+
+    // Buscar a tarefa completa com os responsáveis, dados do projeto e criador
+    const { rows: fullTask } = await db.query(`
+      SELECT 
+        t.*,
+        p.name as project_name,
+        creator_prof.full_name as creator_name,
+        pf.name as project_folder_name,
+        COALESCE(
+          json_agg(
+            json_build_object(
+              'user_id', pr.user_id,
+              'full_name', pr.full_name,
+              'avatar_url', pr.avatar_url,
+              'color', pr.color
+            )
+          ) FILTER (WHERE pr.user_id IS NOT NULL),
+          '[]'
+        ) as assignees
+      FROM tasks t
+      LEFT JOIN projects p ON t.project_id = p.id
+      LEFT JOIN project_folders pf ON t.project_folder_id = pf.id
+      LEFT JOIN task_assignments ta ON t.id = ta.task_id
+      LEFT JOIN profiles pr ON ta.user_id = pr.user_id
+      LEFT JOIN profiles creator_prof ON t.created_by = creator_prof.user_id
+      WHERE t.id = $1
+      GROUP BY t.id, p.name, creator_prof.full_name, pf.name
+    `, [task.id]);
+
+    res.json(fullTask[0]);
   } catch (err) {
     await db.query('ROLLBACK');
     res.status(500).json({ error: err.message });

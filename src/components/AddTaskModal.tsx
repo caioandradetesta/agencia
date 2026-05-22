@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { api } from '../lib/api';
 import { createPortal } from 'react-dom';
 import { X, Loader2, Type, AlignLeft, Flag, Calendar, Users as UsersIcon, Check, RefreshCcw, Briefcase } from 'lucide-react';
 import { useTasks } from '../hooks/useTasks';
@@ -21,12 +22,31 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ onClose, onSuccess }
     title: '',
     description: '',
     project_id: '',
+    project_folder_id: '',
     status: 'todo' as const,
     priority: 'medium' as const,
     due_date: '',
     assignee_ids: [] as string[],
     recurrence: ''
   });
+
+  const [folders, setFolders] = useState<any[]>([]);
+
+  useEffect(() => {
+    setFormData(prev => ({ ...prev, project_folder_id: '' }));
+    if (formData.project_id) {
+      api.get(`/api/projects/${formData.project_id}/folders`)
+        .then(res => {
+          setFolders(res.data);
+        })
+        .catch(err => {
+          console.error('Erro ao buscar pastas do projeto:', err);
+          setFolders([]);
+        });
+    } else {
+      setFolders([]);
+    }
+  }, [formData.project_id]);
 
   const toggleAssignee = (userId: string) => {
     setFormData(prev => ({
@@ -93,6 +113,22 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ onClose, onSuccess }
               ))}
             </select>
           </div>
+
+          {formData.project_id && folders.length > 0 && (
+            <div className="form-group">
+              <label><Briefcase size={16} /> Pasta do Projeto</label>
+              <select
+                value={formData.project_folder_id}
+                onChange={e => setFormData({ ...formData, project_folder_id: e.target.value })}
+                className="premium-select"
+              >
+                <option value="">Nenhuma Pasta</option>
+                {folders.map(folder => (
+                  <option key={folder.id} value={folder.id}>{folder.name}</option>
+                ))}
+              </select>
+            </div>
+          )}
 
           <div className="form-group">
             <label><AlignLeft size={16} /> Descrição</label>

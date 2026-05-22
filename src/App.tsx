@@ -6,6 +6,7 @@ import { ProjectsPage } from './pages/ProjectsPage';
 import { UsersPage } from './pages/UsersPage';
 import { ClientsPage } from './pages/ClientsPage';
 import { ClientRepositoryPage } from './pages/ClientRepositoryPage';
+import { ProjectRepositoryPage } from './pages/ProjectRepositoryPage';
 import { ContractsPage } from './pages/ContractsPage';
 import { LoginPage } from './pages/LoginPage';
 import { AgendaPage } from './pages/AgendaPage';
@@ -59,6 +60,7 @@ function App() {
         <Route path="/agenda" element={<AgendaPage />} />
         <Route path="/clients" element={<ClientsPage />} />
         <Route path="/clients/:id" element={<ClientRepositoryPage />} />
+        <Route path="/projects/:id" element={<ProjectRepositoryPage />} />
         <Route path="/users" element={<UsersPage />} />
         <Route path="/contracts" element={<ContractsPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />

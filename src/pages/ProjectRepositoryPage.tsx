@@ -8,38 +8,35 @@ import {
   Plus, 
   File, 
   Loader2, 
-  Building2, 
-  Mail, 
-  Phone, 
-  FileSpreadsheet, 
-  FileImage, 
-  FileArchive, 
+  Briefcase, 
   FolderOpen,
   Folder,
   Notebook,
-  Lock
+  Lock,
+  FileSpreadsheet,
+  FileImage,
+  FileArchive
 } from 'lucide-react';
 import { api, getFullUrl } from '../lib/api';
-import './ClientRepositoryPage.css';
+import './ProjectRepositoryPage.css';
 
-interface Client {
+interface Project {
   id: string;
   name: string;
-  email: string;
-  company: string;
-  phone: string;
-  logo_url?: string;
+  description?: string;
+  status: string;
+  client_name?: string;
   created_at: string;
 }
 
-interface ClientFolder {
+interface ProjectFolder {
   id: string;
-  client_id: string;
+  project_id: string;
   name: string;
   created_at: string;
 }
 
-interface ClientFile {
+interface ProjectFile {
   id: string;
   name: string;
   description?: string;
@@ -48,21 +45,21 @@ interface ClientFile {
   created_at: string;
 }
 
-interface ClientNote {
+interface ProjectNote {
   id: string;
   name: string;
   content: string;
   created_at: string;
 }
 
-export const ClientRepositoryPage: React.FC = () => {
+export const ProjectRepositoryPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   
   // Loading & Error States
-  const [client, setClient] = useState<Client | null>(null);
-  const [files, setFiles] = useState<ClientFile[]>([]);
-  const [notes, setNotes] = useState<ClientNote[]>([]);
+  const [project, setProject] = useState<Project | null>(null);
+  const [files, setFiles] = useState<ProjectFile[]>([]);
+  const [notes, setNotes] = useState<ProjectNote[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
@@ -80,53 +77,20 @@ export const ClientRepositoryPage: React.FC = () => {
   const [savingNote, setSavingNote] = useState(false);
   
   // Secure Note Modal State
-  const [selectedNote, setSelectedNote] = useState<ClientNote | null>(null);
+  const [selectedNote, setSelectedNote] = useState<ProjectNote | null>(null);
   
   // Folders State
-  const [folders, setFolders] = useState<ClientFolder[]>([]);
+  const [folders, setFolders] = useState<ProjectFolder[]>([]);
   const [currentFolderId, setCurrentFolderId] = useState<string | null>(null);
   const [newFolderName, setNewFolderName] = useState('');
   const [creatingFolder, setCreatingFolder] = useState(false);
   
-  // Refs
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  // Drag and Drop State & Handlers
+  // Drag and Drop State
   const [dragOverFolderId, setDragOverFolderId] = useState<string | null>(null);
   const [dragOverRoot, setDragOverRoot] = useState(false);
-
-  const handleDragStart = (e: React.DragEvent, fileId: string) => {
-    e.dataTransfer.setData('text/plain', fileId);
-  };
-
-  const handleDragOver = (e: React.DragEvent, folderId: string) => {
-    e.preventDefault();
-    setDragOverFolderId(folderId);
-  };
-
-  const handleDragLeave = () => {
-    setDragOverFolderId(null);
-    setDragOverRoot(false);
-  };
-
-  const handleDrop = async (e: React.DragEvent, folderId: string | null) => {
-    e.preventDefault();
-    setDragOverFolderId(null);
-    setDragOverRoot(false);
-    const fileId = e.dataTransfer.getData('text/plain');
-    if (!fileId) return;
-
-    try {
-      await api.patch(`/api/clients/files/${fileId}`, {
-        folder_id: folderId
-      });
-      
-      setFiles(prevFiles => prevFiles.map(f => f.id === fileId ? { ...f, folder_id: folderId } : f));
-    } catch (err: any) {
-      console.error(err);
-      alert('Erro ao mover arquivo: ' + (err.response?.data?.error || err.message));
-    }
-  };
+  
+  // Refs
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const isImage = (url: string) => {
     const ext = url.split('.').pop()?.toLowerCase();
@@ -142,20 +106,20 @@ export const ClientRepositoryPage: React.FC = () => {
       setLoading(true);
       setError(null);
       
-      // Fetch Client details
-      const clientRes = await api.get(`/api/clients/${id}`);
-      setClient(clientRes.data);
+      // Fetch Project details
+      const projectRes = await api.get(`/api/projects/${id}`);
+      setProject(projectRes.data);
       
-      // Fetch Client Folders
-      const foldersRes = await api.get(`/api/clients/${id}/folders`);
+      // Fetch Project Folders
+      const foldersRes = await api.get(`/api/projects/${id}/folders`);
       setFolders(foldersRes.data);
       
-      // Fetch Client Files
-      const filesRes = await api.get(`/api/clients/${id}/files`);
+      // Fetch Project Files
+      const filesRes = await api.get(`/api/projects/${id}/files`);
       setFiles(filesRes.data);
       
-      // Fetch Client Notes
-      const notesRes = await api.get(`/api/clients/${id}/notes`);
+      // Fetch Project Notes
+      const notesRes = await api.get(`/api/projects/${id}/notes`);
       setNotes(notesRes.data);
     } catch (err: any) {
       console.error(err);
@@ -180,7 +144,7 @@ export const ClientRepositoryPage: React.FC = () => {
 
     try {
       setCreatingFolder(true);
-      const res = await api.post(`/api/clients/${id}/folders`, {
+      const res = await api.post(`/api/projects/${id}/folders`, {
         name: newFolderName.trim()
       });
       setFolders([...folders, res.data]);
@@ -194,17 +158,17 @@ export const ClientRepositoryPage: React.FC = () => {
   };
 
   const handleFolderDelete = async (folderId: string, name: string, e: React.MouseEvent) => {
-    e.stopPropagation(); // Previne que o clique dispare navegação de entrar na pasta
+    e.stopPropagation();
     if (!confirm(`Tem certeza que deseja excluir a pasta "${name}"? Todos os arquivos dentro dela serão excluídos permanentemente.`)) return;
 
     try {
-      await api.delete(`/api/clients/folders/${folderId}`);
+      await api.delete(`/api/projects/folders/${folderId}`);
       setFolders(folders.filter(f => f.id !== folderId));
       if (currentFolderId === folderId) {
         setCurrentFolderId(null);
       }
-      // Atualiza a lista de arquivos (pois os arquivos dentro foram deletados em cascata)
-      const filesRes = await api.get(`/api/clients/${id}/files`);
+      // Reload files list
+      const filesRes = await api.get(`/api/projects/${id}/files`);
       setFiles(filesRes.data);
     } catch (err: any) {
       console.error(err);
@@ -216,9 +180,8 @@ export const ClientRepositoryPage: React.FC = () => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       setSelectedFile(file);
-      // Auto fill file name if empty
       if (!fileName) {
-        setFileName(file.name.replace(/\.[^/.]+$/, "")); // remove extension
+        setFileName(file.name.replace(/\.[^/.]+$/, ""));
       }
     }
   };
@@ -237,11 +200,10 @@ export const ClientRepositoryPage: React.FC = () => {
     try {
       setUploading(true);
       
-      // 1. Upload file to backend server
       const formData = new FormData();
       formData.append('file', selectedFile);
       
-      const uploadRes = await api.post('/api/upload?type=client_files', formData, {
+      const uploadRes = await api.post('/api/upload?type=project_files', formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
@@ -249,22 +211,19 @@ export const ClientRepositoryPage: React.FC = () => {
       
       const fileUrl = uploadRes.data.url;
       
-      // 2. Save file metadata in DB
-      await api.post(`/api/clients/${id}/files`, {
+      await api.post(`/api/projects/${id}/files`, {
         name: fileName.trim(),
         description: fileDescription.trim(),
         file_url: fileUrl,
         folder_id: currentFolderId
       });
       
-      // 3. Reset form and reload
       setFileName('');
       setFileDescription('');
       setSelectedFile(null);
       if (fileInputRef.current) fileInputRef.current.value = '';
       
-      // Reload files list
-      const filesRes = await api.get(`/api/clients/${id}/files`);
+      const filesRes = await api.get(`/api/projects/${id}/files`);
       setFiles(filesRes.data);
       
       alert('Arquivo enviado com sucesso!');
@@ -279,10 +238,43 @@ export const ClientRepositoryPage: React.FC = () => {
   const handleFileDelete = async (fileId: string, name: string) => {
     if (!confirm(`Tem certeza que deseja excluir o arquivo "${name}"?`)) return;
     try {
-      await api.delete(`/api/clients/files/${fileId}`);
+      await api.delete(`/api/projects/files/${fileId}`);
       setFiles(files.filter(f => f.id !== fileId));
     } catch (err: any) {
       alert('Erro ao excluir arquivo: ' + err.message);
+    }
+  };
+
+  const handleDragStart = (e: React.DragEvent, fileId: string) => {
+    e.dataTransfer.setData('text/plain', fileId);
+  };
+
+  const handleDragOver = (e: React.DragEvent, folderId: string) => {
+    e.preventDefault();
+    setDragOverFolderId(folderId);
+  };
+
+  const handleDragLeave = () => {
+    setDragOverFolderId(null);
+    setDragOverRoot(false);
+  };
+
+  const handleDrop = async (e: React.DragEvent, folderId: string | null) => {
+    e.preventDefault();
+    setDragOverFolderId(null);
+    setDragOverRoot(false);
+    const fileId = e.dataTransfer.getData('text/plain');
+    if (!fileId) return;
+
+    try {
+      await api.patch(`/api/projects/files/${fileId}`, {
+        folder_id: folderId
+      });
+      
+      setFiles(prevFiles => prevFiles.map(f => f.id === fileId ? { ...f, folder_id: folderId } : f));
+    } catch (err: any) {
+      console.error(err);
+      alert('Erro ao mover arquivo: ' + (err.response?.data?.error || err.message));
     }
   };
 
@@ -296,7 +288,7 @@ export const ClientRepositoryPage: React.FC = () => {
     try {
       setSavingNote(true);
       
-      await api.post(`/api/clients/${id}/notes`, {
+      await api.post(`/api/projects/${id}/notes`, {
         name: noteName.trim(),
         content: noteContent.trim()
       });
@@ -304,8 +296,7 @@ export const ClientRepositoryPage: React.FC = () => {
       setNoteName('');
       setNoteContent('');
       
-      // Reload notes list
-      const notesRes = await api.get(`/api/clients/${id}/notes`);
+      const notesRes = await api.get(`/api/projects/${id}/notes`);
       setNotes(notesRes.data);
     } catch (err: any) {
       console.error(err);
@@ -318,7 +309,7 @@ export const ClientRepositoryPage: React.FC = () => {
   const handleNoteDelete = async (noteId: string, name: string) => {
     if (!confirm(`Tem certeza que deseja excluir a nota "${name}"?`)) return;
     try {
-      await api.delete(`/api/clients/notes/${noteId}`);
+      await api.delete(`/api/projects/notes/${noteId}`);
       setNotes(notes.filter(n => n.id !== noteId));
     } catch (err: any) {
       alert('Erro ao excluir nota: ' + err.message);
@@ -354,75 +345,65 @@ export const ClientRepositoryPage: React.FC = () => {
     });
   };
 
-
-
   if (loading) {
     return (
-      <div className="client-repo-loading">
+      <div className="project-repo-loading">
         <Loader2 className="animate-spin" size={48} />
-        <p>Carregando repositório do cliente...</p>
+        <p>Carregando repositório do projeto...</p>
       </div>
     );
   }
 
-  if (error || !client) {
+  if (error || !project) {
     return (
-      <div className="client-repo-error animate-fade-in">
+      <div className="project-repo-error animate-fade-in">
         <h2>Ops! Ocorreu um problema</h2>
-        <p>{error || 'Cliente não encontrado.'}</p>
-        <button className="back-btn-error" onClick={() => navigate('/clients')}>
-          <ArrowLeft size={18} /> Voltar para Clientes
+        <p>{error || 'Projeto não encontrado.'}</p>
+        <button className="back-btn-error" onClick={() => navigate('/projects')}>
+          <ArrowLeft size={18} /> Voltar para Projetos
         </button>
       </div>
     );
   }
 
   return (
-    <div className="client-repo-page animate-fade-in">
+    <div className="project-repo-page animate-fade-in">
       {/* Back Header & Breadcrumbs */}
       <div className="repo-header-nav">
-        <button className="back-btn" onClick={() => navigate('/clients')}>
+        <button className="back-btn" onClick={() => navigate('/projects')}>
           <ArrowLeft size={18} />
-          Voltar para Clientes
+          Voltar para Projetos
         </button>
         <div className="repo-breadcrumbs">
-          <span onClick={() => navigate('/clients')}>Clientes</span>
+          <span onClick={() => navigate('/projects')}>Projetos</span>
           <span className="separator">/</span>
-          <span className="current">{client.company}</span>
+          <span className="current">{project.name}</span>
           <span className="separator">/</span>
           <span className="current-sub">Repositório</span>
         </div>
       </div>
 
-      {/* Client Mini Profile */}
-      <div className="client-profile-card">
-        <div className="client-info-main">
-          <div className="client-logo-large">
-            {client.logo_url ? (
-              <img src={getFullUrl(client.logo_url)} alt={client.company} />
-            ) : (
-              <Building2 size={36} />
-            )}
+      {/* Project Mini Profile */}
+      <div className="project-profile-card">
+        <div className="project-info-main">
+          <div className="project-logo-large">
+            <Briefcase size={36} />
           </div>
-          <div className="client-text">
-            <h2>{client.company}</h2>
-            <p className="client-responsible">Responsável: <strong>{client.name}</strong></p>
+          <div className="project-text">
+            <h2>{project.name}</h2>
+            {project.description && <p className="project-desc-subtitle">{project.description}</p>}
           </div>
         </div>
         
-        <div className="client-contact-details">
-          {client.email && (
-            <div className="contact-pill">
-              <Mail size={14} />
-              <span>{client.email}</span>
+        <div className="project-contact-details">
+          {project.client_name && (
+            <div className="contact-pill client-name-pill">
+              <span>Cliente: <strong>{project.client_name}</strong></span>
             </div>
           )}
-          {client.phone && (
-            <div className="contact-pill">
-              <Phone size={14} />
-              <span>{client.phone}</span>
-            </div>
-          )}
+          <div className={`status-badge ${project.status}`}>
+            <span>Status: {project.status === 'active' ? 'Ativo' : 'Concluído'}</span>
+          </div>
         </div>
       </div>
 
@@ -459,7 +440,7 @@ export const ClientRepositoryPage: React.FC = () => {
                   <input 
                     type="text" 
                     id="fileName"
-                    placeholder="Ex: Contrato Assinado" 
+                    placeholder="Ex: Briefing Inicial" 
                     value={fileName}
                     onChange={e => setFileName(e.target.value)}
                     required
@@ -762,7 +743,7 @@ export const ClientRepositoryPage: React.FC = () => {
                   <input 
                     type="text" 
                     id="noteName"
-                    placeholder="Ex: Ata de Reunião" 
+                    placeholder="Ex: Credenciais de Acesso" 
                     value={noteName}
                     onChange={e => setNoteName(e.target.value)}
                     required
@@ -853,22 +834,24 @@ export const ClientRepositoryPage: React.FC = () => {
         )}
       </div>
 
-      {/* Secure Note Modal */}
+      {/* Note Detail Modal */}
       {selectedNote && (
-        <div className="repo-modal-overlay" onClick={() => setSelectedNote(null)}>
-          <div className="repo-modal-content animate-fade-in" onClick={e => e.stopPropagation()}>
+        <div className="repo-modal-overlay animate-fade-in" onClick={() => setSelectedNote(null)}>
+          <div className="repo-modal-content animate-scale-up" onClick={e => e.stopPropagation()}>
             <div className="repo-modal-header">
               <div className="repo-modal-title">
-                <Notebook size={20} className="modal-title-icon" />
+                <Lock size={20} className="modal-title-icon" />
                 <h3>{selectedNote.name}</h3>
               </div>
-              <button className="repo-modal-close-btn" onClick={() => setSelectedNote(null)}>×</button>
+              <button className="repo-modal-close-btn" onClick={() => setSelectedNote(null)}>&times;</button>
             </div>
+            
             <div className="repo-modal-body">
-              <p className="note-modal-text">{selectedNote.content}</p>
+              <pre className="note-modal-text">{selectedNote.content}</pre>
             </div>
+            
             <div className="repo-modal-footer">
-              <span className="note-modal-date">Criada em: {formatDate(selectedNote.created_at)}</span>
+              <span className="note-modal-date">Criado em: {formatDate(selectedNote.created_at)}</span>
               <button className="repo-modal-btn-close" onClick={() => setSelectedNote(null)}>Fechar</button>
             </div>
           </div>

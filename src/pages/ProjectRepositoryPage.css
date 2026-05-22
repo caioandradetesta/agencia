@@ -1,4 +1,4 @@
-.client-repo-page {
+.project-repo-page {
   display: flex;
   flex-direction: column;
   gap: 24px;
@@ -76,8 +76,8 @@
   cursor: default;
 }
 
-/* Client Mini Profile Card */
-.client-profile-card {
+/* Project Mini Profile Card */
+.project-profile-card {
   background-color: var(--bg-secondary);
   border-radius: 20px;
   border: 1px solid var(--border-color);
@@ -90,13 +90,13 @@
   flex-wrap: wrap;
 }
 
-.client-info-main {
+.project-info-main {
   display: flex;
   align-items: center;
   gap: 20px;
 }
 
-.client-logo-large {
+.project-logo-large {
   width: 72px;
   height: 72px;
   background-color: var(--accent-soft);
@@ -109,31 +109,22 @@
   border: 1px solid var(--border-color);
 }
 
-.client-logo-large img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.client-text h2 {
+.project-text h2 {
   font-size: 24px;
   color: var(--text-primary);
   margin-bottom: 4px;
 }
 
-.client-responsible {
+.project-desc-subtitle {
   font-size: 14px;
   color: var(--text-secondary);
 }
 
-.client-responsible strong {
-  color: var(--text-primary);
-}
-
-.client-contact-details {
+.project-contact-details {
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
+  align-items: center;
 }
 
 .contact-pill {
@@ -146,6 +137,31 @@
   border-radius: 30px;
   font-size: 13px;
   border: 1px solid var(--border-color);
+}
+
+.client-name-pill strong {
+  color: var(--text-primary);
+  margin-left: 4px;
+}
+
+.status-badge {
+  padding: 8px 16px;
+  border-radius: 30px;
+  font-size: 13px;
+  font-weight: 600;
+  border: 1px solid transparent;
+}
+
+.status-badge.active {
+  background-color: rgba(99, 102, 241, 0.1);
+  color: var(--accent-primary);
+  border-color: rgba(99, 102, 241, 0.2);
+}
+
+.status-badge.completed {
+  background-color: rgba(16, 185, 129, 0.1);
+  color: #10B981;
+  border-color: rgba(16, 185, 129, 0.2);
 }
 
 /* Tabs Navigation */
@@ -351,13 +367,6 @@
   flex-direction: column;
 }
 
-.items-list-card h3 {
-  font-size: 18px;
-  color: var(--text-primary);
-  margin-bottom: 20px;
-  font-weight: 600;
-}
-
 /* Empty States */
 .empty-state {
   display: flex;
@@ -497,12 +506,6 @@
   color: var(--text-primary);
 }
 
-.file-action-btn.download:hover {
-  color: var(--accent-primary);
-  background-color: var(--accent-soft);
-  border-color: rgba(99, 102, 241, 0.2);
-}
-
 .file-action-btn.delete:hover {
   color: #EF4444;
   background-color: rgba(239, 68, 68, 0.1);
@@ -529,7 +532,6 @@
   transition: all 0.2s ease;
 }
 
-/* Make it look like a sleek post-it or card */
 [data-theme='dark'] .note-item-card {
   background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
 }
@@ -584,10 +586,6 @@
   justify-content: center;
 }
 
-.note-item-card.clickable {
-  cursor: pointer;
-}
-
 .note-card-secure-badge {
   display: flex;
   align-items: center;
@@ -616,8 +614,8 @@
 }
 
 /* Loading & Error fullscreen/container views */
-.client-repo-loading,
-.client-repo-error {
+.project-repo-loading,
+.project-repo-error {
   min-height: 400px;
   display: flex;
   flex-direction: column;
@@ -628,11 +626,11 @@
   color: var(--text-secondary);
 }
 
-.client-repo-loading svg {
+.project-repo-loading svg {
   color: var(--accent-primary);
 }
 
-.client-repo-error h2 {
+.project-repo-error h2 {
   color: var(--text-primary);
 }
 
@@ -802,30 +800,30 @@
   color: var(--accent-primary);
 }
 
-.repo-title-nav .breadcrumb-item.active {
-  color: var(--text-primary);
-  font-weight: 700;
+.breadcrumb-separator {
+  color: var(--text-muted);
+  font-size: 14px;
 }
 
-.repo-title-nav .breadcrumb-separator {
-  color: var(--text-muted);
+.repo-title-nav .breadcrumb-item.active {
+  color: var(--accent-primary);
 }
 
 .btn-back-root {
-  background-color: var(--bg-tertiary);
+  background-color: var(--bg-primary);
   color: var(--text-secondary);
   border: 1px solid var(--border-color);
   padding: 6px 12px;
   border-radius: 8px;
-  font-size: 13px;
+  font-size: 12.5px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .btn-back-root:hover {
-  background-color: var(--accent-soft);
   color: var(--accent-primary);
+  background-color: var(--accent-soft);
   border-color: rgba(99, 102, 241, 0.2);
 }
 
@@ -833,8 +831,8 @@
   background-color: var(--bg-primary);
   border: 1px solid var(--border-color);
   border-radius: 12px;
-  padding: 12px 16px;
-  margin-bottom: 24px;
+  padding: 12px;
+  margin-bottom: 20px;
 }
 
 .create-folder-form {
@@ -861,33 +859,28 @@
 .create-folder-btn {
   background-color: var(--accent-primary);
   color: white;
-  border: none;
-  border-radius: 8px;
   padding: 8px 16px;
-  font-size: 13px;
+  border-radius: 8px;
   font-weight: 600;
-  cursor: pointer;
+  font-size: 13.5px;
   display: flex;
   align-items: center;
   gap: 6px;
   transition: background-color 0.2s;
-  white-space: nowrap;
+  cursor: pointer;
 }
 
 .create-folder-btn:hover {
   background-color: var(--accent-hover);
 }
 
-.repo-items-container {
-  display: flex;
-  flex-direction: column;
-  gap: 28px;
+.create-folder-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .folders-section {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+  margin-bottom: 24px;
 }
 
 .section-title {
@@ -895,8 +888,8 @@
   font-weight: 700;
   color: var(--text-secondary);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-bottom: 8px;
+  letter-spacing: 0.5px;
+  margin-bottom: 12px;
   border-bottom: 1px solid var(--border-color);
   padding-bottom: 6px;
 }
