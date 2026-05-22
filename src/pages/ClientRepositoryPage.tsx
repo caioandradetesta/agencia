@@ -15,6 +15,7 @@ import {
   FileImage, 
   FileArchive, 
   FolderOpen,
+  Folder,
   Notebook,
   Lock
 } from 'lucide-react';
@@ -31,11 +32,19 @@ interface Client {
   created_at: string;
 }
 
+interface ClientFolder {
+  id: string;
+  client_id: string;
+  name: string;
+  created_at: string;
+}
+
 interface ClientFile {
   id: string;
   name: string;
   description?: string;
   file_url: string;
+  folder_id?: string | null;
   created_at: string;
 }
 
@@ -73,12 +82,22 @@ export const ClientRepositoryPage: React.FC = () => {
   // Secure Note Modal State
   const [selectedNote, setSelectedNote] = useState<ClientNote | null>(null);
   
+  // Folders State
+  const [folders, setFolders] = useState<ClientFolder[]>([]);
+  const [currentFolderId, setCurrentFolderId] = useState<string | null>(null);
+  const [newFolderName, setNewFolderName] = useState('');
+  const [creatingFolder, setCreatingFolder] = useState(false);
+  
   // Refs
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const isImage = (url: string) => {
     const ext = url.split('.').pop()?.toLowerCase();
     return ext ? ['jpg', 'jpeg', 'png', 'gif', 'svg', 'webp'].includes(ext) : false;
+  };
+
+  const getFolderFileCount = (folderId: string) => {
+    return files.filter(f => f.folder_id === folderId).length;
   };
 
   const fetchData = async () => {
@@ -89,6 +108,10 @@ export const ClientRepositoryPage: React.FC = () => {
       // Fetch Client details
       const clientRes = await api.get(`/api/clients/${id}`);
       setClient(clientRes.data);
+      
+      // Fetch Client Folders
+      const foldersRes = await api.get(`/api/clients/${id}/folders`);
+      setFolders(foldersRes.data);
       
       // Fetch Client Files
       const filesRes = await api.get(`/api/clients/${id}/files`);
@@ -110,6 +133,47 @@ export const ClientRepositoryPage: React.FC = () => {
       fetchData();
     }
   }, [id]);
+
+  const handleCreateFolder = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newFolderName.trim()) {
+      alert('Digite o nome da pasta.');
+      return;
+    }
+
+    try {
+      setCreatingFolder(true);
+      const res = await api.post(`/api/clients/${id}/folders`, {
+        name: newFolderName.trim()
+      });
+      setFolders([...folders, res.data]);
+      setNewFolderName('');
+    } catch (err: any) {
+      console.error(err);
+      alert('Erro ao criar pasta: ' + (err.response?.data?.error || err.message));
+    } finally {
+      setCreatingFolder(false);
+    }
+  };
+
+  const handleFolderDelete = async (folderId: string, name: string, e: React.MouseEvent) => {
+    e.stopPropagation(); // Previne que o clique dispare navegação de entrar na pasta
+    if (!confirm(`Tem certeza que deseja excluir a pasta "${name}"? Todos os arquivos dentro dela serão excluídos permanentemente.`)) return;
+
+    try {
+      await api.delete(`/api/clients/folders/${folderId}`);
+      setFolders(folders.filter(f => f.id !== folderId));
+      if (currentFolderId === folderId) {
+        setCurrentFolderId(null);
+      }
+      // Atualiza a lista de arquivos (pois os arquivos dentro foram deletados em cascata)
+      const filesRes = await api.get(`/api/clients/${id}/files`);
+      setFiles(filesRes.data);
+    } catch (err: any) {
+      console.error(err);
+      alert('Erro ao excluir pasta: ' + err.message);
+    }
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -152,7 +216,8 @@ export const ClientRepositoryPage: React.FC = () => {
       await api.post(`/api/clients/${id}/files`, {
         name: fileName.trim(),
         description: fileDescription.trim(),
-        file_url: fileUrl
+        file_url: fileUrl,
+        folder_id: currentFolderId
       });
       
       // 3. Reset form and reload
@@ -420,57 +485,219 @@ export const ClientRepositoryPage: React.FC = () => {
               </form>
             </div>
 
-            {/* Files List */}
+            {/* Files List with Folders Navigation */}
             <div className="items-list-card">
-              <div className="list-header">
-                <h3>Arquivos do Cliente</h3>
-              </div>
-              
-              {files.length === 0 ? (
-                <div className="empty-state">
-                  <FolderOpen size={40} />
-                  <p>Nenhum arquivo enviado ainda.</p>
-                  <span>Use o formulário ao lado para fazer o upload do primeiro documento.</span>
-                </div>
-              ) : (
-                <div className="files-grid">
-                  {files.map(file => (
-                    <div 
-                      key={file.id} 
-                      className="file-item-card clickable"
-                      onClick={() => window.open(getFullUrl(file.file_url), '_blank')}
-                      title="Clique para abrir o arquivo em uma nova janela"
+              <div className="list-header-repo">
+                <div className="repo-title-nav">
+                  <div className="repo-breadcrumbs">
+                    <span 
+                      className={`breadcrumb-item ${currentFolderId === null ? 'active' : 'clickable'}`}
+                      onClick={() => setCurrentFolderId(null)}
                     >
-                      <div className="file-item-icon">
-                        {isImage(file.file_url) ? (
-                          <img 
-                            src={getFullUrl(file.file_url)} 
-                            alt={file.name} 
-                            className="file-image-preview" 
-                          />
-                        ) : (
-                          getFileIcon(file.file_url)
-                        )}
-                      </div>
-                      
-                      <div className="file-item-info">
-                        <h4>{file.name}</h4>
-                        {file.description && <p className="file-desc">{file.description}</p>}
-                        <span className="file-date">{formatDate(file.created_at)}</span>
-                      </div>
-
-                      <div className="file-item-actions" onClick={e => e.stopPropagation()}>
-                        <button 
-                          onClick={() => handleFileDelete(file.id, file.name)}
-                          className="file-action-btn delete"
-                          title="Excluir"
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      </div>
-                    </div>
-                  ))}
+                      <FolderOpen size={16} /> Raiz
+                    </span>
+                    {currentFolderId !== null && (
+                      <>
+                        <span className="breadcrumb-separator">/</span>
+                        <span className="breadcrumb-item active">
+                          {folders.find(f => f.id === currentFolderId)?.name || 'Pasta'}
+                        </span>
+                      </>
+                    )}
+                  </div>
+                  
+                  {currentFolderId !== null && (
+                    <button 
+                      onClick={() => setCurrentFolderId(null)}
+                      className="btn-back-root"
+                    >
+                      Voltar para a Raiz
+                    </button>
+                  )}
                 </div>
+              </div>
+
+              {currentFolderId === null && (
+                <div className="create-folder-section">
+                  <form onSubmit={handleCreateFolder} className="create-folder-form">
+                    <input 
+                      type="text" 
+                      placeholder="Nome da nova pasta..." 
+                      value={newFolderName}
+                      onChange={e => setNewFolderName(e.target.value)}
+                      required
+                    />
+                    <button type="submit" className="create-folder-btn" disabled={creatingFolder}>
+                      {creatingFolder ? 'Criando...' : <><Plus size={16} /> Criar Pasta</>}
+                    </button>
+                  </form>
+                </div>
+              )}
+
+              {/* Contents Area */}
+              {currentFolderId === null ? (
+                // Root View: List Folders + Root Files
+                folders.length === 0 && files.filter(f => !f.folder_id).length === 0 ? (
+                  <div className="empty-state">
+                    <FolderOpen size={40} />
+                    <p>Nenhum arquivo ou pasta enviado ainda.</p>
+                    <span>Use o formulário para fazer upload ou crie uma pasta para organizar.</span>
+                  </div>
+                ) : (
+                  <div className="repo-items-container">
+                    {folders.length > 0 && (
+                      <div className="folders-section animate-fade-in">
+                        <h4 className="section-title">Pastas</h4>
+                        <div className="folders-grid">
+                          {folders.map(folder => (
+                            <div 
+                              key={folder.id} 
+                              className="folder-card clickable"
+                              onClick={() => setCurrentFolderId(folder.id)}
+                            >
+                              <div className="folder-icon-wrapper">
+                                <Folder size={32} className="folder-icon" />
+                              </div>
+                              <div className="folder-info">
+                                <span className="folder-name" title={folder.name}>{folder.name}</span>
+                                <span className="folder-count">
+                                  {getFolderFileCount(folder.id)} {getFolderFileCount(folder.id) === 1 ? 'arquivo' : 'arquivos'}
+                                </span>
+                              </div>
+                              <button 
+                                className="folder-delete-btn"
+                                onClick={(e) => handleFolderDelete(folder.id, folder.name, e)}
+                                title="Excluir Pasta e Conteúdos"
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="files-section animate-fade-in">
+                      {folders.length > 0 && <h4 className="section-title">Arquivos na Raiz</h4>}
+                      {files.filter(f => !f.folder_id).length === 0 ? (
+                        folders.length > 0 ? (
+                          <p className="no-root-files">Nenhum arquivo na raiz. Todos estão organizados em pastas.</p>
+                        ) : null
+                      ) : (
+                        <div className="files-grid">
+                          {files.filter(f => !f.folder_id).map(file => (
+                            <div 
+                              key={file.id} 
+                              className="file-item-card clickable"
+                              onClick={() => window.open(getFullUrl(file.file_url), '_blank')}
+                              title="Clique para abrir o arquivo em uma nova janela"
+                            >
+                              <div className="file-item-icon">
+                                {isImage(file.file_url) ? (
+                                  <img 
+                                    src={getFullUrl(file.file_url)} 
+                                    alt={file.name} 
+                                    className="file-image-preview" 
+                                  />
+                                ) : (
+                                  getFileIcon(file.file_url)
+                                )}
+                              </div>
+                              
+                              <div className="file-item-info">
+                                <h4>{file.name}</h4>
+                                {file.description && <p className="file-desc">{file.description}</p>}
+                                <span className="file-date">{formatDate(file.created_at)}</span>
+                              </div>
+
+                              <div className="file-item-actions" onClick={e => e.stopPropagation()}>
+                                <button 
+                                  onClick={() => handleFileDelete(file.id, file.name)}
+                                  className="file-action-btn delete"
+                                  title="Excluir"
+                                >
+                                  <Trash2 size={16} />
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )
+              ) : (
+                // Inside Folder View: List files inside currentFolderId
+                files.filter(f => f.folder_id === currentFolderId).length === 0 ? (
+                  <div className="empty-state">
+                    <FolderOpen size={40} />
+                    <p>Esta pasta está vazia.</p>
+                    <span>Use o formulário ao lado para enviar arquivos diretamente para esta pasta.</span>
+                    <button 
+                      className="delete-current-folder-btn-empty"
+                      onClick={(e) => {
+                        const folder = folders.find(f => f.id === currentFolderId);
+                        if (folder) handleFolderDelete(folder.id, folder.name, e);
+                      }}
+                    >
+                      <Trash2 size={14} /> Excluir Pasta Vazia
+                    </button>
+                  </div>
+                ) : (
+                  <div className="repo-items-container animate-fade-in">
+                    <div className="folder-actions-header">
+                      <p>Visualizando arquivos da pasta <strong>{folders.find(f => f.id === currentFolderId)?.name}</strong></p>
+                      <button 
+                        className="delete-current-folder-btn"
+                        onClick={(e) => {
+                          const folder = folders.find(f => f.id === currentFolderId);
+                          if (folder) handleFolderDelete(folder.id, folder.name, e);
+                        }}
+                      >
+                        <Trash2 size={14} /> Excluir esta Pasta
+                      </button>
+                    </div>
+
+                    <div className="files-grid">
+                      {files.filter(f => f.folder_id === currentFolderId).map(file => (
+                        <div 
+                          key={file.id} 
+                          className="file-item-card clickable"
+                          onClick={() => window.open(getFullUrl(file.file_url), '_blank')}
+                          title="Clique para abrir o arquivo em uma nova janela"
+                        >
+                          <div className="file-item-icon">
+                            {isImage(file.file_url) ? (
+                              <img 
+                                src={getFullUrl(file.file_url)} 
+                                alt={file.name} 
+                                className="file-image-preview" 
+                              />
+                            ) : (
+                              getFileIcon(file.file_url)
+                            )}
+                          </div>
+                          
+                          <div className="file-item-info">
+                            <h4>{file.name}</h4>
+                            {file.description && <p className="file-desc">{file.description}</p>}
+                            <span className="file-date">{formatDate(file.created_at)}</span>
+                          </div>
+
+                          <div className="file-item-actions" onClick={e => e.stopPropagation()}>
+                            <button 
+                              onClick={() => handleFileDelete(file.id, file.name)}
+                              className="file-action-btn delete"
+                              title="Excluir"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )
               )}
             </div>
           </div>

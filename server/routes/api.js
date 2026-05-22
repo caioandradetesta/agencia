@@ -110,13 +110,13 @@ router.get('/clients/:clientId/files', async (req, res) => {
 router.post('/clients/:clientId/files', async (req, res) => {
   try {
     const { clientId } = req.params;
-    const { name, description, file_url } = req.body;
+    const { name, description, file_url, folder_id } = req.body;
     if (!name || !file_url) {
       return res.status(400).json({ error: 'Os campos Nome e Arquivo são obrigatórios.' });
     }
     const { rows } = await db.query(
-      'INSERT INTO client_files (client_id, name, description, file_url) VALUES ($1, $2, $3, $4) RETURNING *',
-      [clientId, name, description || '', file_url]
+      'INSERT INTO client_files (client_id, name, description, file_url, folder_id) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+      [clientId, name, description || '', file_url, folder_id || null]
     );
     res.json(rows[0]);
   } catch (err) {
@@ -131,6 +131,57 @@ router.delete('/clients/files/:id', async (req, res) => {
     const { rows } = await db.query('DELETE FROM client_files WHERE id = $1 RETURNING *', [id]);
     if (rows.length === 0) {
       return res.status(404).json({ error: 'Arquivo não encontrado.' });
+    }
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// --- PASTAS DO CLIENTE ---
+
+// Listar pastas do cliente
+router.get('/clients/:clientId/folders', async (req, res) => {
+  try {
+    const { clientId } = req.params;
+    const { rows } = await db.query(
+      'SELECT * FROM client_folders WHERE client_id = $1 ORDER BY name ASC',
+      [clientId]
+    );
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Criar pasta para o cliente
+router.post('/clients/:clientId/folders', async (req, res) => {
+  try {
+    const { clientId } = req.params;
+    const { name } = req.body;
+    if (!name) {
+      return res.status(400).json({ error: 'O nome da pasta é obrigatório.' });
+    }
+    const { rows } = await db.query(
+      'INSERT INTO client_folders (client_id, name) VALUES ($1, $2) RETURNING *',
+      [clientId, name]
+    );
+    res.json(rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Excluir pasta do cliente (deleção em cascata dos arquivos incluída no DB)
+router.delete('/clients/folders/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { rows } = await db.query(
+      'DELETE FROM client_folders WHERE id = $1 RETURNING *',
+      [id]
+    );
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Pasta não encontrada.' });
     }
     res.json({ success: true });
   } catch (err) {

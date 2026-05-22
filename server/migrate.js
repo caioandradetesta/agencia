@@ -119,6 +119,21 @@ async function migrate() {
       );
     `, 'Tabela client_notes (V10)');
 
+    // Pastas de clientes (V11)
+    await runQuery(`
+      CREATE TABLE IF NOT EXISTS client_folders (
+        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+        client_id UUID NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+        name TEXT NOT NULL,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+      );
+    `, 'Tabela client_folders (V11)');
+
+    // Coluna folder_id em client_files (V11)
+    await runQuery(`
+      ALTER TABLE client_files ADD COLUMN IF NOT EXISTS folder_id UUID REFERENCES client_folders(id) ON DELETE CASCADE;
+    `, 'Coluna folder_id em client_files (V11)');
+
     console.log('✅ Migração V6 finalizada!');
   } catch (err) {
     console.error('❌ ERRO NO PROCESSO DE MIGRAÇÃO:', err);
