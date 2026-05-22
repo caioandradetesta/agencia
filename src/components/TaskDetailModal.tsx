@@ -431,12 +431,36 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, onClose,
               ) : null}
             </div>
           </div>
-          <button className="close-btn" onClick={onClose}><X size={20} /></button>
+          <div className="header-actions">
+            <button 
+              type="button" 
+              className="premium-btn-header delete" 
+              onClick={handleDelete}
+              disabled={loading}
+            >
+              <Trash2 size={16} />
+              <span>Excluir</span>
+            </button>
+            <button 
+              type="submit" 
+              form="task-edit-form" 
+              className="premium-btn-header save" 
+              disabled={loading}
+            >
+              {loading ? <Loader2 className="animate-spin" size={16} /> : (
+                <>
+                  <Check size={16} />
+                  <span>Salvar</span>
+                </>
+              )}
+            </button>
+            <button className="close-btn" type="button" onClick={onClose}><X size={20} /></button>
+          </div>
         </div>
 
         <div className="detail-grid">
           {/* Lado Esquerdo: Edição */}
-          <form onSubmit={handleSubmit} className="task-edit-side">
+          <form id="task-edit-form" onSubmit={handleSubmit} className="task-edit-side">
             <div className="form-group">
               <label><Type size={16} /> Título da Tarefa</label>
               <input 
@@ -792,20 +816,6 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, onClose,
               </div>
             </div>
 
-            <div className="modal-actions-footer">
-              <button 
-                type="button" 
-                className="delete-task-btn" 
-                onClick={handleDelete}
-                disabled={loading}
-              >
-                <Trash2 size={18} />
-                Excluir
-              </button>
-              <button type="submit" className="save-task-btn" disabled={loading}>
-                {loading ? <Loader2 className="animate-spin" size={18} /> : 'Salvar Alterações'}
-              </button>
-            </div>
           </form>
 
           {/* Lado Direito: Comentários / Histórico */}

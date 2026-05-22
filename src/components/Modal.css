@@ -1494,3 +1494,52 @@
   cursor: not-allowed;
 }
 
+/* Header Action Buttons */
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.premium-btn-header {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  transition: all 0.2s;
+  cursor: pointer;
+  border: 1px solid var(--border-color);
+  outline: none;
+}
+
+.premium-btn-header.save {
+  background-color: var(--accent-primary);
+  color: white;
+  border-color: var(--accent-primary);
+}
+
+.premium-btn-header.save:hover:not(:disabled) {
+  background-color: var(--accent-hover);
+  transform: translateY(-1px);
+}
+
+.premium-btn-header.delete {
+  background-color: var(--bg-tertiary);
+  color: #EF4444;
+}
+
+.premium-btn-header.delete:hover:not(:disabled) {
+  background-color: #EF4444;
+  color: white;
+  border-color: #EF4444;
+  transform: translateY(-1px);
+}
+
+.premium-btn-header:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+

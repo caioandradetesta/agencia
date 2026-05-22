@@ -85,10 +85,25 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ onClose, onSuccess }
       <div className="modal-content animate-fade-in" onClick={e => e.stopPropagation()}>
         <div className="modal-header">
           <h2>Nova Tarefa</h2>
-          <button className="close-btn" onClick={onClose}><X size={20} /></button>
+          <div className="header-actions">
+            <button 
+              type="submit" 
+              form="add-task-form" 
+              className="premium-btn-header save" 
+              disabled={loading}
+            >
+              {loading ? <Loader2 className="animate-spin" size={16} /> : (
+                <>
+                  <Check size={16} />
+                  <span>Criar</span>
+                </>
+              )}
+            </button>
+            <button className="close-btn" type="button" onClick={onClose}><X size={20} /></button>
+          </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="modal-form">
+        <form id="add-task-form" onSubmit={handleSubmit} className="modal-form">
           <div className="form-group">
             <label><Type size={16} /> Título da Tarefa</label>
             <input 
@@ -193,13 +208,6 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ onClose, onSuccess }
                 <option value="quarterly">Trimestral</option>
               </select>
             </div>
-          </div>
-
-          <div className="modal-actions">
-            <button type="button" className="cancel-btn" onClick={onClose}>Cancelar</button>
-            <button type="submit" className="submit-btn" disabled={loading}>
-              {loading ? <Loader2 className="animate-spin" size={18} /> : 'Criar Tarefa'}
-            </button>
           </div>
         </form>
       </div>
