@@ -42,8 +42,10 @@ try {
 
 app.use(express.static(distPath));
 
-// Servir a pasta de uploads publicamente
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+// Servir a pasta de uploads publicamente (suporta pasta customizada/volume persistente)
+const uploadsDir = process.env.UPLOADS_DIR || path.join(__dirname, 'uploads');
+console.log('📂 Servindo pasta de uploads em:', uploadsDir);
+app.use('/uploads', express.static(uploadsDir));
 
 // Fallback para o React (SPA) - Deve ser a ÚLTIMA rota
 app.use((req, res) => {

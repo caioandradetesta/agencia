@@ -8,7 +8,8 @@ const fs = require('fs');
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     const type = req.query.type || 'others';
-    const dir = path.join(__dirname, '../uploads', type);
+    const baseDir = process.env.UPLOADS_DIR || path.join(__dirname, '../uploads');
+    const dir = path.join(baseDir, type);
     
     // Cria o diretório se não existir
     if (!fs.existsSync(dir)) {
