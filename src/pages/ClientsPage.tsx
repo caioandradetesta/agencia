@@ -97,7 +97,7 @@ export const ClientsPage: React.FC = () => {
                 </div>
                 
                 <div className="card-body">
-                  <Link to={`/clients/${client.id}`} target="_blank" className="client-title-link" title="Acessar Repositório">
+                  <Link to={`/clients/${client.id}`} className="client-title-link" title="Acessar Repositório">
                     <h3>{client.company}</h3>
                   </Link>
                   <div className="responsible-box">
@@ -125,7 +125,7 @@ export const ClientsPage: React.FC = () => {
                 </div>
                 
                 <div className="card-actions">
-                  <Link to={`/clients/${client.id}`} target="_blank" className="view-repository-btn">
+                  <Link to={`/clients/${client.id}`} className="view-repository-btn">
                     Repositório <FolderOpen size={14} />
                   </Link>
                   <button className="view-profile">

@@ -276,9 +276,9 @@ export const ClientRepositoryPage: React.FC = () => {
     <div className="client-repo-page animate-fade-in">
       {/* Back Header & Breadcrumbs */}
       <div className="repo-header-nav">
-        <button className="back-btn" onClick={() => window.close()}>
+        <button className="back-btn" onClick={() => navigate('/clients')}>
           <ArrowLeft size={18} />
-          Fechar Repositório
+          Voltar para Clientes
         </button>
         <div className="repo-breadcrumbs">
           <span onClick={() => navigate('/clients')}>Clientes</span>
