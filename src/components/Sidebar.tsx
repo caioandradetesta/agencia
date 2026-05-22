@@ -12,7 +12,8 @@ import {
   Menu,
   Moon,
   Sun,
-  LogOut
+  LogOut,
+  Briefcase
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import './Sidebar.css';
@@ -35,12 +36,8 @@ const navItems: NavItem[] = [
   { 
     id: 'projects', 
     label: 'Projetos', 
-    icon: <LayoutDashboard size={20} />,
-    path: '/projects',
-    subItems: [
-      { id: 'all-projects', label: 'Todos os Projetos', path: '/projects' },
-      { id: 'new-project', label: 'Novo Projeto', path: '/projects' }
-    ]
+    icon: <Briefcase size={20} />,
+    path: '/projects'
   },
   { 
     id: 'tasks', 
@@ -56,7 +53,7 @@ const navItems: NavItem[] = [
 
 export const Sidebar: React.FC = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [expandedItems, setExpandedItems] = useState<string[]>(['projects']);
+  const [expandedItems, setExpandedItems] = useState<string[]>([]);
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const { user, logout } = useAuth();
 

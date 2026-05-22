@@ -10,24 +10,12 @@ import { ProjectRepositoryPage } from './pages/ProjectRepositoryPage';
 import { ContractsPage } from './pages/ContractsPage';
 import { LoginPage } from './pages/LoginPage';
 import { AgendaPage } from './pages/AgendaPage';
+import { DashboardPage } from './pages/DashboardPage';
 import { useAuth } from './context/AuthContext';
 import { 
   Loader2
 } from 'lucide-react';
 import './App.css';
-
-const Dashboard = () => (
-  <div className="animate-fade-in">
-    <div className="dashboard-header">
-      <div className="welcome">
-        <h1>Bem-vindo ao Painel! 👋</h1>
-        <p>Aqui está o resumo das atividades da agência.</p>
-      </div>
-    </div>
-    
-    <KanbanBoard />
-  </div>
-);
 
 function App() {
   const { user, loading } = useAuth();
@@ -53,7 +41,7 @@ function App() {
   return (
     <Layout>
       <Routes>
-        <Route path="/" element={<Dashboard />} />
+        <Route path="/" element={<DashboardPage />} />
         <Route path="/projects" element={<ProjectsPage />} />
         <Route path="/wiki" element={<ProjectWiki />} />
         <Route path="/tasks" element={<KanbanBoard />} />
