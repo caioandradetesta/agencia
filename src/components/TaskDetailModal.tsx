@@ -33,7 +33,7 @@ const formatValue = (field: string, value: any, usersList: any[], columnsList: a
     return col ? col.title : value;
   }
   if (field === 'priority') {
-    const map: Record<string, string> = { low: 'Baixa', medium: 'Média', high: 'Alta' };
+    const map: Record<string, string> = { low: 'Baixo', medium: 'Médio', high: 'Alta' };
     return map[value] || value;
   }
   if (field === 'due_date') {
@@ -527,9 +527,9 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ task, onClose,
                   value={formData.priority}
                   onChange={e => setFormData({ ...formData, priority: e.target.value as any })}
                 >
-                  <option value="low">Baixa</option>
-                  <option value="medium">Média</option>
                   <option value="high">Alta</option>
+                  <option value="medium">Médio</option>
+                  <option value="low">Baixo</option>
                 </select>
               </div>
               <div className="form-group">

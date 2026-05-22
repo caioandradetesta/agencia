@@ -116,8 +116,8 @@ export const AgendaPage: React.FC = () => {
             <select value={filterPriority} onChange={e => setFilterPriority(e.target.value)}>
               <option value="">Todas as Prioridades</option>
               <option value="high">Alta</option>
-              <option value="medium">Média</option>
-              <option value="low">Baixa</option>
+              <option value="medium">Médio</option>
+              <option value="low">Baixo</option>
             </select>
           </div>
           <div className="filter-item">

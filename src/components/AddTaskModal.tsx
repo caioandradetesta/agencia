@@ -182,9 +182,9 @@ export const AddTaskModal: React.FC<AddTaskModalProps> = ({ onClose, onSuccess }
                 value={formData.priority}
                 onChange={e => setFormData({ ...formData, priority: e.target.value as any })}
               >
-                <option value="low">Baixa</option>
-                <option value="medium">Média</option>
                 <option value="high">Alta</option>
+                <option value="medium">Médio</option>
+                <option value="low">Baixo</option>
               </select>
             </div>
             <div className="form-group">

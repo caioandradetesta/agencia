@@ -45,11 +45,11 @@ export const KanbanBoard: React.FC = () => {
 
   const getPriorityLabel = (priority?: string) => {
     const map: Record<string, string> = {
-      low: 'Baixa',
-      medium: 'Média',
+      low: 'Baixo',
+      medium: 'Médio',
       high: 'Alta'
     };
-    return map[priority || 'medium'] || priority || 'Média';
+    return map[priority || 'medium'] || priority || 'Médio';
   };
 
   const onDragStart = (e: React.DragEvent, taskId: string) => {
@@ -115,8 +115,8 @@ export const KanbanBoard: React.FC = () => {
             >
               <option value="">Prioridade: Todas</option>
               <option value="high">Alta</option>
-              <option value="medium">Média</option>
-              <option value="low">Baixa</option>
+              <option value="medium">Médio</option>
+              <option value="low">Baixo</option>
             </select>
 
             <select
